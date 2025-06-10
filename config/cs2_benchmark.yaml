@@ -1,0 +1,114 @@
+# UI Flow Configuration for CS2 Benchmark with hardcoded coordinates
+# This YAML file defines the UI states and transitions for navigating 
+# CS2's menu system to run a benchmark
+
+# Name of the initial state
+initial_state: "initial"
+
+# Name of the target/end state
+target_state: "benchmark_complete"
+
+# Definitions of UI states and their identifying elements
+states:
+  initial:
+    description: "Initial loading state"
+    required_elements: []
+    timeout: 60  # Allow up to 60 seconds for game to load
+
+  main_menu:
+    description: "CS2 Main Menu"
+    required_elements:
+      - type: "label"
+        text: "PLAY"
+    timeout: 30
+
+  play_menu:
+    description: "Play menu screen"
+    required_elements:
+      - type: "label"
+        text: "Workshop"
+    timeout: 20
+
+  workshop_maps:
+    description: "Workshop maps selection screen"
+    required_elements:
+      - type: "label"
+        text: "FPS"
+      - type: "button"
+        text: "GO"
+    timeout: 30
+
+  loading_benchmark:
+    description: "Loading benchmark map"
+    required_elements: []  # This state might not have consistent UI elements
+    timeout: 60
+
+  benchmark_running:
+    description: "Benchmark is currently running"
+    required_elements: []  # The benchmark might not have consistent UI elements to detect
+    timeout: 120  # This should be longer than the benchmark duration
+
+  benchmark_complete:
+    description: "Benchmark has completed"
+    required_elements: []  # The end state might be detected by timeout
+    timeout: 10
+
+# State transition definitions
+transitions:
+  # From initial to main menu (wait for game to load)
+  "initial->main_menu":
+    action: "wait"
+    duration: 15  # Wait for main menu to appear
+    expected_delay: 15
+
+  # From main menu to play menu - FIXED COORDINATES
+  "main_menu->play_menu":
+    action: "click"
+    hardcoded_coords:  # Use hardcoded coordinates based on screenshot
+      x: 713  # Center of PLAY button from screenshot
+      y: 26
+    expected_delay: 2
+
+  # From play menu to workshop maps - FIXED COORDINATES
+  "play_menu->workshop_maps":
+    action: "click"
+    hardcoded_coords:
+      x: 350  # Approximate position for Workshop Maps
+      y: 200
+    expected_delay: 3
+
+  # From workshop maps to loading benchmark - FIXED COORDINATES
+  "workshop_maps->loading_benchmark":
+    action: "click"
+    hardcoded_coords:
+      x: 500  # Approximate position for GO button near CS2 FPS Bench
+      y: 300
+    expected_delay: 5
+
+  # From loading benchmark to benchmark running
+  "loading_benchmark->benchmark_running":
+    action: "wait"
+    duration: 10  # Wait for benchmark to start
+    expected_delay: 10
+
+  # From benchmark running to benchmark complete
+  "benchmark_running->benchmark_complete":
+    action: "wait"
+    duration: 110  # Wait for the benchmark to finish (110 seconds as specified)
+    expected_delay: 0
+
+# Fallback actions for error recovery
+fallbacks:
+  # Generic escape key press as fallback
+  general:
+    action: "key"
+    key: "escape"
+    expected_delay: 1
+    max_retries: 3
+
+  # If in an unknown state, press escape and wait
+  unknown:
+    action: "key"
+    key: "escape"
+    expected_delay: 2
+    max_retries: 5
