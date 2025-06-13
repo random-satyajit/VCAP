@@ -41,7 +41,7 @@ steps:
       text_match: "contains"
     verify_success:
       - type: "icon"
-        text: "GO"
+        text: "6 0 "
     expected_delay: 2
     timeout: 20
     
@@ -49,7 +49,8 @@ steps:
     description: "Click GO to start benchmark"
     find_and_click:
       type: "icon"
-      text: "GO"
+      text: "6 0 "
+
       text_match: "exact"
     verify_success: []  # No specific elements to verify during loading
     expected_delay: 5
