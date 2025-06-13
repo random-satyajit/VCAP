@@ -14,15 +14,15 @@ states:
     description: "Main menu screen"
     required_elements:
       - type: "button"
-        text: "Start"
+        text: "PLAY"
       - type: "button"
-        text: "Options"
+        text: "LOADOUT"
       - type: "button"
         text: "Exit"
     timeout: 10  # Seconds to wait before timeout
 
   options_menu:
-    description: "Options menu screen"
+    description: "PLAy MENU SCREEN"
     required_elements:
       - type: "button"
         text: "Graphics"
@@ -84,17 +84,14 @@ states:
 # State transition definitions
 transitions:
   # From initial to main menu (wait for game to load)
-  "initial->main_menu":
-    action: "wait"
-    duration: 5  # Wait for main menu to appear
-    expected_delay: 5
+  
     
-  # From main menu to options
-  "main_menu->options_menu":
+  # From main menu to paly menu
+  "main_menu->play_menu":
     action: "click"
     target:
       type: "button"
-      text: "Options"
+      text: "PLAY"
     expected_delay: 1  # Expected delay in seconds before new state
 
   # From options to graphics

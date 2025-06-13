@@ -1,9 +1,9 @@
-# UI Flow Configuration for CS2 Benchmark with hardcoded coordinates
+# UI Flow Configuration for CS2 Benchmark
 # This YAML file defines the UI states and transitions for navigating 
 # CS2's menu system to run a benchmark
 
 # Name of the initial state
-initial_state: "initial"
+initial_state: "main_menu"
 
 # Name of the target/end state
 target_state: "benchmark_complete"
@@ -20,20 +20,37 @@ states:
     required_elements:
       - type: "label"
         text: "PLAY"
+      # - type: "label"
+      #   text: "INVENTORY"
+      # - type: "label"
+      #   text: "LOADOUT"
+      # - type: "label"
+      #   text: "STORE"
     timeout: 30
 
   play_menu:
     description: "Play menu screen"
     required_elements:
+      # - type: "label"
+      #   text: "MATCHMAKING"
+      # - type: "label"
+      #   text: "PRACTICE"
       - type: "label"
-        text: "Workshop"
+        text: "WORKSHOP MAPS"
     timeout: 20
 
   workshop_maps:
     description: "Workshop maps selection screen"
     required_elements:
       - type: "label"
-        text: "FPS"
+        text: "Filter Maps"
+      - type: "label"
+        text: "CS2 FPS Bench"
+    timeout: 30
+
+  map_selection:
+    description: "Map selection with GO button"
+    required_elements:
       - type: "button"
         text: "GO"
     timeout: 30
@@ -55,34 +72,36 @@ states:
 
 # State transition definitions
 transitions:
-  # From initial to main menu (wait for game to load)
-  "initial->main_menu":
-    action: "wait"
-    duration: 15  # Wait for main menu to appear
-    expected_delay: 15
-
-  # From main menu to play menu - FIXED COORDINATES
+  # From main_menu to play_menu
   "main_menu->play_menu":
     action: "click"
-    hardcoded_coords:  # Use hardcoded coordinates based on screenshot
-      x: 713  # Center of PLAY button from screenshot
-      y: 26
-    expected_delay: 2
+    target:
+      type: "label"
+      text: "PLAY"
+    expected_delay: 2  # Expected delay in seconds before new state
 
-  # From play menu to workshop maps - FIXED COORDINATES
+  # From play menu to workshop maps
   "play_menu->workshop_maps":
     action: "click"
-    hardcoded_coords:
-      x: 350  # Approximate position for Workshop Maps
-      y: 200
+    target:
+      type: "label"
+      text: "WORKSHOP MAPS"
     expected_delay: 3
 
-  # From workshop maps to loading benchmark - FIXED COORDINATES
-  "workshop_maps->loading_benchmark":
+  # From workshop maps to map selection
+  "workshop_maps->map_selection":
     action: "click"
-    hardcoded_coords:
-      x: 500  # Approximate position for GO button near CS2 FPS Bench
-      y: 300
+    target:
+      type: "label"
+      text: "CS2 FPS Bench"
+    expected_delay: 2
+
+  # From map selection to loading benchmark
+  "map_selection->loading_benchmark":
+    action: "click"
+    target:
+      type: "button"
+      text: "GO"
     expected_delay: 5
 
   # From loading benchmark to benchmark running

@@ -1,6 +1,6 @@
 """
-New GUI Application for Game UI Navigation Automation Tool
-This provides a completely redesigned interface for controlling the automation tool.
+GUI Application for Game UI Navigation Automation Tool
+This provides a user-friendly interface for controlling the automation tool.
 """
 
 import os
@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, messagebox
 import logging
 import queue
+import yaml
 from pathlib import Path
 
 # Add logging handler for GUI
@@ -27,19 +28,21 @@ class AutomationGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Game UI Navigation Tool")
-        self.root.geometry("900x700")
+        self.root.geometry("1200x800")
         self.root.minsize(800, 600)
         
         # Variables
         self.sut_ip = tk.StringVar(value="192.168.50.231")
-        self.sut_port = tk.StringVar(value="8000")
+        self.sut_port = tk.StringVar(value="8080")
         self.game_path = tk.StringVar()
         self.lm_studio_url = tk.StringVar(value="http://127.0.0.1:1234")
-        self.config_path = tk.StringVar(value="config/cs2_benchmark.yaml")
+        self.config_path = tk.StringVar(value="config/games/cs2_benchmark.yaml")
         self.max_iterations = tk.StringVar(value="50")
         self.vision_model = tk.StringVar(value="gemma")  # Default to Gemma
+        self.omniparser_url = tk.StringVar(value="http://localhost:8000")  # Default Omniparser URL
         self.running = False
         self.process_thread = None
+        self.game_name = "Unknown Game"  # Added for game-specific paths
         
         # Queue for logging
         self.log_queue = queue.Queue()
@@ -85,13 +88,21 @@ class AutomationGUI:
         self.logger.addHandler(queue_handler)
 
     def create_widgets(self):
-        """Create all the GUI elements"""
+        """Create all the GUI elements with logs on the right side"""
         # Main frame with padding
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # ===== SETTINGS SECTION =====
-        settings_frame = ttk.LabelFrame(main_frame, text="Settings", padding="10")
+        # Create left and right panes for split layout
+        left_pane = ttk.Frame(main_frame)
+        right_pane = ttk.Frame(main_frame)
+        
+        # Place the panes side by side
+        left_pane.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=(0, 5))
+        right_pane.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 0))
+        
+        # ===== SETTINGS SECTION (LEFT PANE) =====
+        settings_frame = ttk.LabelFrame(left_pane, text="Settings", padding="10")
         settings_frame.pack(fill=tk.X, padx=5, pady=5)
         
         # Create a grid with 6 columns for better organization
@@ -107,8 +118,8 @@ class AutomationGUI:
         ttk.Label(settings_frame, text="Port:").grid(row=0, column=2, sticky=tk.W, padx=5, pady=5)
         ttk.Entry(settings_frame, textvariable=self.sut_port, width=6).grid(row=0, column=3, sticky=tk.W, padx=5, pady=5)
         
-        # LM Studio URL
-        ttk.Label(settings_frame, text="LM Studio URL:").grid(row=0, column=4, sticky=tk.W, padx=5, pady=5)
+        # Vision System URL
+        ttk.Label(settings_frame, text="Vision System URL:").grid(row=0, column=4, sticky=tk.W, padx=5, pady=5)
         ttk.Entry(settings_frame, textvariable=self.lm_studio_url, width=25).grid(row=0, column=5, sticky=tk.W+tk.E, padx=5, pady=5)
         
         # ---- ROW 2: Game Path & Vision Model ----
@@ -119,18 +130,37 @@ class AutomationGUI:
         ttk.Entry(path_frame, textvariable=self.game_path).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(path_frame, text="Browse...", command=self.browse_game_path).pack(side=tk.RIGHT, padx=5)
         
-        # Vision Model - COMPLETELY REDESIGNED
+        # Vision Model Selection
         ttk.Label(settings_frame, text="Vision Model:").grid(row=1, column=4, sticky=tk.W, padx=5, pady=5)
         model_frame = ttk.Frame(settings_frame)
         model_frame.grid(row=1, column=5, sticky=tk.W, padx=5, pady=5)
         
         # Force enough space between radio buttons
-        gemma_rb = ttk.Radiobutton(model_frame, text="Gemma", variable=self.vision_model, value="gemma")
+        gemma_rb = ttk.Radiobutton(model_frame, text="Gemma", variable=self.vision_model, value="gemma",
+                                command=self.update_vision_model_ui)
         gemma_rb.pack(side=tk.LEFT)
         # Add a spacer label
         ttk.Label(model_frame, text="   ").pack(side=tk.LEFT)  
-        qwen_rb = ttk.Radiobutton(model_frame, text="Qwen VL", variable=self.vision_model, value="qwen")
+        qwen_rb = ttk.Radiobutton(model_frame, text="Qwen VL", variable=self.vision_model, value="qwen",
+                                command=self.update_vision_model_ui)
         qwen_rb.pack(side=tk.LEFT)
+        # Add Omniparser option
+        ttk.Label(model_frame, text="   ").pack(side=tk.LEFT)
+        omniparser_rb = ttk.Radiobutton(model_frame, text="Omniparser", variable=self.vision_model, value="omniparser",
+                                    command=self.update_vision_model_ui)
+        omniparser_rb.pack(side=tk.LEFT)
+        
+        # Additional settings for Omniparser
+        self.omniparser_frame = ttk.Frame(settings_frame)
+        self.omniparser_frame.grid(row=3, column=0, columnspan=6, sticky=tk.W+tk.E, padx=5, pady=5)
+        ttk.Label(self.omniparser_frame, text="Omniparser URL:").pack(side=tk.LEFT, padx=5)
+        ttk.Entry(self.omniparser_frame, textvariable=self.omniparser_url, width=30).pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
+        self.omniparser_status_label = ttk.Label(self.omniparser_frame, text="Not Connected", foreground="red")
+        self.omniparser_status_label.pack(side=tk.LEFT, padx=5)
+        ttk.Button(self.omniparser_frame, text="Test Connection", command=self.test_omniparser_connection).pack(side=tk.LEFT, padx=5)
+        
+        # Initially hide Omniparser settings
+        self.omniparser_frame.grid_remove()
         
         # ---- ROW 3: Config & Max Iterations ----
         # Config File
@@ -144,8 +174,16 @@ class AutomationGUI:
         ttk.Label(settings_frame, text="Max Iterations:").grid(row=2, column=4, sticky=tk.W, padx=5, pady=5)
         ttk.Entry(settings_frame, textvariable=self.max_iterations, width=6).grid(row=2, column=5, sticky=tk.W, padx=5, pady=5)
         
+        # ---- ROW 4: Game Information ----
+        # Game Info Label (new)
+        self.game_info_frame = ttk.Frame(settings_frame)
+        self.game_info_frame.grid(row=4, column=0, columnspan=6, sticky=tk.W+tk.E, padx=5, pady=5)
+        ttk.Label(self.game_info_frame, text="Game Info:").pack(side=tk.LEFT, padx=5)
+        self.game_info_label = ttk.Label(self.game_info_frame, text="No game selected", foreground="blue")
+        self.game_info_label.pack(side=tk.LEFT, padx=5)
+        
         # ===== ACTION BUTTONS =====
-        button_frame = ttk.Frame(main_frame)
+        button_frame = ttk.Frame(left_pane)
         button_frame.pack(fill=tk.X, padx=5, pady=5)
         
         self.start_button = ttk.Button(button_frame, text="Start Automation", command=self.start_automation)
@@ -158,7 +196,7 @@ class AutomationGUI:
         ttk.Button(button_frame, text="Open Logs Folder", command=self.open_logs_folder).pack(side=tk.LEFT, padx=5, pady=5)
         
         # Status indicators
-        status_frame = ttk.Frame(main_frame)
+        status_frame = ttk.Frame(left_pane)
         status_frame.pack(fill=tk.X, padx=5, pady=5)
         
         ttk.Label(status_frame, text="Status:").pack(side=tk.LEFT, padx=5)
@@ -166,17 +204,17 @@ class AutomationGUI:
         self.status_label.pack(side=tk.LEFT, padx=5)
         
         # ===== SCREENSHOT SECTION =====
-        self.image_frame = ttk.LabelFrame(main_frame, text="Latest Screenshot", padding="10")
+        self.image_frame = ttk.LabelFrame(left_pane, text="Latest Screenshot", padding="10")
         self.image_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        ttk.Label(self.image_frame, text="Screenshots and annotated images will be saved to the logs folder").pack(padx=5, pady=20)
+        ttk.Label(self.image_frame, text="Screenshots and annotated images will be saved to the logs folder").pack(padx=5, pady=10)
         ttk.Button(self.image_frame, text="Open Latest Screenshot", command=self.open_latest_screenshot).pack(padx=5, pady=5)
         
-        # ===== LOG DISPLAY =====
-        log_frame = ttk.LabelFrame(main_frame, text="Logs", padding="10")
+        # ===== LOG DISPLAY (RIGHT PANE) =====
+        log_frame = ttk.LabelFrame(right_pane, text="Logs", padding="10")
         log_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        self.log_area = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, width=80, height=20)
+        self.log_area = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, width=50, height=40)
         self.log_area.pack(fill=tk.BOTH, expand=True)
         self.log_area.config(state=tk.DISABLED)
         
@@ -186,6 +224,9 @@ class AutomationGUI:
         self.log_area.tag_config("WARNING", foreground="orange")
         self.log_area.tag_config("ERROR", foreground="red")
         self.log_area.tag_config("CRITICAL", foreground="red", background="yellow")
+        
+        # Load game info if a config file is already selected
+        self.load_game_info()
 
     def process_log_queue(self):
         """Process logs from the queue and display them in the GUI"""
@@ -209,6 +250,28 @@ class AutomationGUI:
         formatter = self.logger.handlers[1].formatter
         return formatter.format(record)
 
+    def update_vision_model_ui(self):
+        """Update UI based on selected vision model"""
+        if self.vision_model.get() == "omniparser":
+            self.omniparser_frame.grid()
+        else:
+            self.omniparser_frame.grid_remove()
+    
+    def test_omniparser_connection(self):
+        """Test connection to Omniparser server"""
+        try:
+            import requests
+            response = requests.get(f"{self.omniparser_url.get()}/probe", timeout=5)
+            if response.status_code == 200:
+                self.omniparser_status_label.config(text="Connected", foreground="green")
+                messagebox.showinfo("Success", "Successfully connected to Omniparser server!")
+            else:
+                self.omniparser_status_label.config(text="Connection Failed", foreground="red")
+                messagebox.showerror("Error", f"Failed to connect to Omniparser server: HTTP {response.status_code}")
+        except Exception as e:
+            self.omniparser_status_label.config(text="Connection Failed", foreground="red")
+            messagebox.showerror("Error", f"Failed to connect to Omniparser server: {str(e)}")
+    
     def browse_game_path(self):
         """Open file dialog to browse for game executable"""
         filepath = filedialog.askopenfilename(
@@ -226,6 +289,32 @@ class AutomationGUI:
         )
         if filepath:
             self.config_path.set(filepath)
+            # Load game info when a new config is selected
+            self.load_game_info()
+
+    def load_game_info(self):
+        """Load and display game information from the selected config file"""
+        config_file = self.config_path.get()
+        if not config_file or not os.path.exists(config_file):
+            self.game_info_label.config(text="No valid config file selected")
+            return
+            
+        try:
+            with open(config_file, 'r') as f:
+                config = yaml.safe_load(f)
+                metadata = config.get("metadata", {})
+                self.game_name = metadata.get("game_name", os.path.basename(config_file).replace('.yaml', ''))
+                benchmark_duration = metadata.get("benchmark_duration", "Unknown")
+                resolution = metadata.get("resolution", "Any")
+                
+                self.game_info_label.config(
+                    text=f"{self.game_name} - Resolution: {resolution}, Benchmark: ~{benchmark_duration}s"
+                )
+                
+                self.logger.info(f"Loaded config for game: {self.game_name}")
+        except Exception as e:
+            self.game_info_label.config(text=f"Error loading config: {str(e)}")
+            self.logger.error(f"Failed to load game config: {str(e)}")
 
     def clear_logs(self):
         """Clear the log display area"""
@@ -235,22 +324,22 @@ class AutomationGUI:
 
     def open_logs_folder(self):
         """Open the logs folder in file explorer"""
-        logs_path = os.path.abspath("logs")
-        os.makedirs(logs_path, exist_ok=True)
+        game_logs_path = os.path.abspath(f"logs/{self.game_name}" if self.game_name else "logs")
+        os.makedirs(game_logs_path, exist_ok=True)
         
         # Platform-specific way to open folder
         if sys.platform == 'win32':
-            os.startfile(logs_path)
+            os.startfile(game_logs_path)
         elif sys.platform == 'darwin':  # macOS
             import subprocess
-            subprocess.Popen(['open', logs_path])
+            subprocess.Popen(['open', game_logs_path])
         else:  # Linux
             import subprocess
-            subprocess.Popen(['xdg-open', logs_path])
+            subprocess.Popen(['xdg-open', game_logs_path])
 
     def open_latest_screenshot(self):
         """Open the latest annotated screenshot"""
-        screenshots_dir = os.path.abspath("logs/annotated")
+        screenshots_dir = os.path.abspath(f"logs/{self.game_name}/annotated" if self.game_name else "logs/annotated")
         os.makedirs(screenshots_dir, exist_ok=True)
         
         # Find the latest screenshot
@@ -298,6 +387,9 @@ class AutomationGUI:
             messagebox.showerror("Invalid Input", "Config file does not exist")
             return
             
+        # Load game info to ensure we have the game name
+        self.load_game_info()
+            
         # Clear stop event and update GUI state
         self.stop_event.clear()
         self.running = True
@@ -313,7 +405,7 @@ class AutomationGUI:
         self.automation_thread.start()
         
         # Log start
-        self.logger.info("Starting automation process...")
+        self.logger.info(f"Starting automation process for {self.game_name}...")
 
     def stop_automation(self):
         """Stop the automation process"""
@@ -335,16 +427,18 @@ class AutomationGUI:
             from modules.screenshot import ScreenshotManager
             from modules.gemma_client import GemmaClient
             from modules.qwen_client import QwenClient
+            from modules.omniparser_client import OmniparserClient
             from modules.annotator import Annotator
             from modules.config_parser import ConfigParser
             from modules.decision_engine import DecisionEngine
             from modules.game_launcher import GameLauncher
-            from modules.coordinate_scaler import CoordinateScaler
             
-            # Create directory structure
+            # Create game-specific directory structure
             os.makedirs("logs", exist_ok=True)
-            os.makedirs("logs/screenshots", exist_ok=True)
-            os.makedirs("logs/annotated", exist_ok=True)
+            game_dir = f"logs/{self.game_name}" if self.game_name else "logs"
+            os.makedirs(game_dir, exist_ok=True)
+            os.makedirs(f"{game_dir}/screenshots", exist_ok=True)
+            os.makedirs(f"{game_dir}/annotated", exist_ok=True)
             
             # Initialize components
             self.logger.info(f"Connecting to SUT at {self.sut_ip.get()}:{self.sut_port.get()}")
@@ -360,12 +454,20 @@ class AutomationGUI:
             elif self.vision_model.get() == 'qwen':
                 self.logger.info("Using Qwen VL for UI detection")
                 vision_model = QwenClient(self.lm_studio_url.get())
+            elif self.vision_model.get() == 'omniparser':
+                self.logger.info("Using Omniparser for UI detection")
+                vision_model = OmniparserClient(self.omniparser_url.get())
                 
             annotator = Annotator()
             config_parser = ConfigParser(self.config_path.get())
             decision_engine = DecisionEngine(config_parser.get_config())
             game_launcher = GameLauncher(network)
-            coordinate_scaler = CoordinateScaler()
+            
+            # Get game metadata
+            game_metadata = config_parser.get_game_metadata().get("metadata", {})
+            self.logger.info(f"Game metadata loaded: {game_metadata}")
+            benchmark_duration = game_metadata.get("benchmark_duration", 120)
+            startup_wait = game_metadata.get("startup_wait", 30)
             
             # Main execution loop
             iteration = 0
@@ -374,7 +476,7 @@ class AutomationGUI:
             
             # Track time spent in each state to detect timeouts
             state_start_time = time.time()
-            max_time_in_state = 60  # Maximum seconds to remain in the same state
+            max_time_in_state = 60  # Default maximum seconds to remain in the same state
             
             try:
                 # Launch the game
@@ -382,8 +484,8 @@ class AutomationGUI:
                 game_launcher.launch(self.game_path.get())
                 
                 # Wait for game to initialize
-                self.logger.info("Waiting 30 seconds for game to fully initialize...")
-                wait_time = 30
+                self.logger.info(f"Waiting {startup_wait} seconds for game to fully initialize...")
+                wait_time = startup_wait
                 for i in range(wait_time):
                     if self.stop_event.is_set():
                         break
@@ -400,20 +502,30 @@ class AutomationGUI:
                     iteration += 1
                     self.logger.info(f"Iteration {iteration}: Current state: {current_state}")
                     
+                    # Get state-specific timeout
+                    state_def = config_parser.get_state_definition(current_state)
+                    state_timeout = state_def.get("timeout", max_time_in_state) if state_def else max_time_in_state
+                    
                     # Check for timeout in current state
                     time_in_state = time.time() - state_start_time
-                    if time_in_state > max_time_in_state:
-                        self.logger.warning(f"Timeout in state {current_state} after {time_in_state:.1f} seconds")
-                        # Attempt recovery - press escape and reset to initial state
-                        network.send_action({"type": "key", "key": "escape"})
-                        self.logger.info("Sending escape key as timeout recovery")
+                    if time_in_state > state_timeout:
+                        self.logger.warning(f"Timeout in state {current_state} after {time_in_state:.1f} seconds (limit: {state_timeout}s)")
+                        
+                        # Get fallback action
+                        fallback_action = decision_engine.get_fallback_action(current_state)
+                        self.logger.info(f"Using fallback action for timeout: {fallback_action}")
+                        
+                        # Execute fallback action
+                        network.send_action(fallback_action)
+                        self.logger.info("Executed timeout recovery action")
                         time.sleep(2)
-                        current_state = "initial"
+                        
+                        # Reset timeout timer
                         state_start_time = time.time()
                         continue
                     
                     # Capture screenshot
-                    screenshot_path = f"logs/screenshots/screenshot_{iteration}.png"
+                    screenshot_path = f"{game_dir}/screenshots/screenshot_{iteration}.png"
                     screenshot_mgr.capture(screenshot_path)
                     self.logger.info(f"Screenshot captured: {screenshot_path}")
                     
@@ -421,32 +533,20 @@ class AutomationGUI:
                     bounding_boxes = vision_model.detect_ui_elements(screenshot_path)
                     self.logger.info(f"Detected {len(bounding_boxes)} UI elements")
                     
-                    # Calibrate and scale coordinates
-                    coordinate_scaler.calibrate_from_screenshot(screenshot_path, bounding_boxes)
-                    scaled_boxes = coordinate_scaler.scale_bounding_boxes(bounding_boxes)
-                    self.logger.info(f"Scaled coordinates with factors: X={coordinate_scaler.scale_x:.2f}, Y={coordinate_scaler.scale_y:.2f}")
-                    
-                    # Annotate screenshot with the original bounding boxes
-                    annotated_path = f"logs/annotated/annotated_{iteration}.png"
+                    # Annotate screenshot
+                    annotated_path = f"{game_dir}/annotated/annotated_{iteration}.png"
                     annotator.draw_bounding_boxes(screenshot_path, bounding_boxes, annotated_path)
                     self.logger.info(f"Annotated screenshot saved: {annotated_path}")
                     
-                    # Create a separate annotated image with scaled bounding boxes
-                    scaled_annotated_path = f"logs/annotated/scaled_{iteration}.png"
-                    annotator.draw_bounding_boxes(screenshot_path, scaled_boxes, scaled_annotated_path)
-                    self.logger.info(f"Scaled annotated screenshot saved: {scaled_annotated_path}")
-                    
-                    # Determine next action using the scaled bounding boxes
+                    # Determine next action
                     previous_state = current_state
                     next_action, new_state = decision_engine.determine_next_action(
-                        current_state, scaled_boxes
+                        current_state, bounding_boxes
                     )
-                    self.logger.info(f"Next action: {next_action}, transitioning to state: {new_state}")
                     
-                    # Execute action
-                    if next_action and not self.stop_event.is_set():
-                        # Format the action for better logging
-                        action_str = ""
+                    # Format the action for better logging
+                    action_str = ""
+                    if next_action:
                         if next_action.get("type") == "click":
                             action_str = f"Click at ({next_action.get('x')}, {next_action.get('y')})"
                         elif next_action.get("type") == "key":
@@ -456,6 +556,10 @@ class AutomationGUI:
                         else:
                             action_str = str(next_action)
                             
+                    self.logger.info(f"Next action: {action_str}, transitioning to state: {new_state}")
+                    
+                    # Execute action
+                    if next_action and not self.stop_event.is_set():
                         self.logger.info(f"Executing action: {action_str}")
                         network.send_action(next_action)
                         self.logger.info(f"Action completed: {action_str}")
@@ -467,11 +571,22 @@ class AutomationGUI:
                         state_start_time = time.time()
                         self.logger.info(f"State changed from {previous_state} to {current_state}")
                     
-                    time.sleep(1)  # Small delay between iterations
+                    # Get delay from transition if specified
+                    transition_key = f"{previous_state}->{current_state}"
+                    transition = config_parser.get_config().get("transitions", {}).get(transition_key, {})
+                    delay = transition.get("expected_delay", 1)
+                    
+                    time.sleep(delay)  # Wait before next iteration
                 
                 # Check if we reached the target state
                 if current_state == target_state:
                     self.logger.info(f"Successfully reached target state: {target_state}")
+                    
+                    # Report benchmark results if available
+                    if hasattr(decision_engine, "state_context") and "benchmark_duration" in decision_engine.state_context:
+                        benchmark_duration = decision_engine.state_context["benchmark_duration"]
+                        self.logger.info(f"Benchmark completed in {benchmark_duration:.2f} seconds")
+                        
                     self.status_label.config(text="Completed", foreground="green")
                 elif self.stop_event.is_set():
                     self.logger.info("Automation process was manually stopped")
@@ -492,6 +607,8 @@ class AutomationGUI:
             self.logger.info("Cleaning up resources")
             if 'network' in locals():
                 network.close()
+            if 'vision_model' in locals() and hasattr(vision_model, 'close'):
+                vision_model.close()
             
             # Reset GUI state
             self.running = False

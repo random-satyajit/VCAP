@@ -1,5 +1,5 @@
 """
-Configuration parser module for loading and validating the UI flow YAML file.
+Enhanced configuration parser module for game-specific benchmark configurations.
 """
 
 import os
@@ -10,15 +10,15 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger(__name__)
 
 class ConfigParser:
-    """Handles loading and parsing the YAML configuration file."""
+    """Handles loading and parsing game benchmark YAML configurations."""
     
     def __init__(self, config_path: str):
         """
-        Initialize the config parser.
+        Initialize the config parser with a game-specific configuration.
         
         Args:
             config_path: Path to the YAML configuration file
-        
+            
         Raises:
             FileNotFoundError: If the config file doesn't exist
             ValueError: If the config file is invalid
@@ -26,7 +26,10 @@ class ConfigParser:
         self.config_path = config_path
         self.config = self._load_config()
         self._validate_config()
-        logger.info(f"ConfigParser initialized with {config_path}")
+        
+        # Extract game metadata
+        self.game_name = self.config.get("metadata", {}).get("game_name", "Unknown Game")
+        logger.info(f"ConfigParser initialized for {self.game_name} using {config_path}")
     
     def _load_config(self) -> Dict[str, Any]:
         """
@@ -56,7 +59,7 @@ class ConfigParser:
     
     def _validate_config(self) -> bool:
         """
-        Validate the configuration structure.
+        Validate the configuration structure with enhanced checks for game benchmarks.
         
         Returns:
             True if valid
@@ -71,6 +74,15 @@ class ConfigParser:
                 logger.error(f"Missing required section '{section}' in config")
                 raise ValueError(f"Invalid config: missing '{section}' section")
         
+        # Validate metadata section
+        metadata = self.config.get("metadata", {})
+        if not metadata.get("game_name"):
+            logger.warning("No game_name specified in metadata")
+            
+        # Check if benchmark duration is present
+        if "benchmark_duration" not in metadata:
+            logger.warning("No benchmark_duration specified in metadata, using default")
+            
         # Validate states
         states = self.config.get("states", {})
         if not isinstance(states, dict) or not states:
@@ -107,6 +119,12 @@ class ConfigParser:
         if target_state not in states and target_state != "completed":
             logger.warning(f"Target state '{target_state}' not defined in states section")
         
+        # Validate fallbacks section if present
+        fallbacks = self.config.get("fallbacks", {})
+        if fallbacks and not isinstance(fallbacks, dict):
+            logger.error("Fallbacks section must be a dictionary")
+            raise ValueError("Invalid config: fallbacks section must be a dictionary")
+        
         logger.info("Configuration validation successful")
         return True
     
@@ -131,3 +149,12 @@ class ConfigParser:
         """
         states = self.config.get("states", {})
         return states.get(state_name)
+        
+    def get_game_metadata(self) -> Dict[str, Any]:
+        """
+        Get game metadata from the configuration.
+        
+        Returns:
+            Metadata dictionary with game information
+        """
+        return self.config.get("metadata", {})
