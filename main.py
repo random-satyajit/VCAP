@@ -9,6 +9,7 @@ import time
 import logging
 import argparse
 import glob
+import datetime
 from pathlib import Path
 
 from modules.network import NetworkManager
@@ -23,15 +24,34 @@ from modules.config_parser import ConfigParser
 
 def create_directory_structure(game_name):
     """
-    Create the necessary directory structure for a specific game.
+    Create the necessary directory structure for a specific game run.
     
     Args:
         game_name: Name of the game for organizing logs
+        
+    Returns:
+        Dictionary with paths for different directories
     """
+    # Create timestamp for this run
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Create base directories
     os.makedirs("logs", exist_ok=True)
-    os.makedirs(f"logs/{game_name}", exist_ok=True)
-    os.makedirs(f"logs/{game_name}/screenshots", exist_ok=True)
-    os.makedirs(f"logs/{game_name}/annotated", exist_ok=True)
+    game_dir = f"logs/{game_name}"
+    os.makedirs(game_dir, exist_ok=True)
+    
+    # Create run-specific directory
+    run_dir = f"{game_dir}/run_{timestamp}"
+    os.makedirs(run_dir, exist_ok=True)
+    os.makedirs(f"{run_dir}/screenshots", exist_ok=True)
+    os.makedirs(f"{run_dir}/annotated", exist_ok=True)
+    
+    return {
+        "game_dir": game_dir,
+        "run_dir": run_dir,
+        "screenshots_dir": f"{run_dir}/screenshots",
+        "annotated_dir": f"{run_dir}/annotated"
+    }
 
 def parse_arguments():
     """
@@ -61,22 +81,18 @@ def parse_arguments():
     
     return parser.parse_args()
 
-def setup_game_specific_logging(game_name):
+def setup_game_specific_logging(run_dir):
     """
-    Configure logging for a specific game.
+    Configure logging for a specific game run.
     
     Args:
-        game_name: Name of the game for log organization
+        run_dir: Path to the run-specific directory
         
     Returns:
         Path to the log file
     """
-    game_log_dir = f"logs/{game_name}"
-    os.makedirs(game_log_dir, exist_ok=True)
-    
-    # Create file handler for game-specific logs
-    timestamp = time.strftime('%Y%m%d_%H%M%S')
-    log_file = f"{game_log_dir}/run_{timestamp}.log"
+    # Create file handler for run-specific logs
+    log_file = f"{run_dir}/automation.log"
     
     file_handler = logging.FileHandler(log_file)
     file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -167,17 +183,20 @@ def main():
     game_name = config_parser.game_name
     
     # Create directory structure
-    create_directory_structure(game_name)
+    dirs = create_directory_structure(game_name)
+    run_dir = dirs["run_dir"]
     
     # Setup logging
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         handlers=[logging.StreamHandler()])
-    log_file = setup_game_specific_logging(game_name)
+    log_file = setup_game_specific_logging(run_dir)
     
     logger = logging.getLogger(__name__)
     logger.info(f"Starting Game UI Navigation for: {game_name}")
     logger.info(f"Using configuration: {config_path}")
+    logger.info(f"Run directory: {run_dir}")
+    logger.info(f"Log file: {log_file}")
     logger.info(f"SUT: {args.sut_ip}:{args.sut_port}")
     logger.info(f"Game path: {args.game_path}")
     logger.info(f"Vision model: {args.vision_model} at {args.model_url}")
@@ -203,7 +222,7 @@ def main():
         game_launcher = GameLauncher(network)
         
         # Extract benchmark metadata
-        game_metadata = config_parser.get_game_metadata()
+        game_metadata = config_parser.get_config().get("metadata", {})
         benchmark_duration = game_metadata.get("benchmark_duration", 120)
         logger.info(f"Expected benchmark duration: {benchmark_duration} seconds")
         
@@ -252,8 +271,8 @@ def main():
                     state_start_time = time.time()
                     continue
                     
-                # Capture screenshot
-                screenshot_path = f"logs/{game_name}/screenshots/screenshot_{iteration}.png"
+                # Capture screenshot - USE RUN DIRECTORY
+                screenshot_path = f"{dirs['screenshots_dir']}/screenshot_{iteration}.png"
                 screenshot_mgr.capture(screenshot_path)
                 logger.info(f"Screenshot captured: {screenshot_path}")
                 
@@ -261,8 +280,8 @@ def main():
                 bounding_boxes = vision_model.detect_ui_elements(screenshot_path)
                 logger.info(f"Detected {len(bounding_boxes)} UI elements")
                 
-                # Annotate screenshot
-                annotated_path = f"logs/{game_name}/annotated/annotated_{iteration}.png"
+                # Annotate screenshot - USE RUN DIRECTORY
+                annotated_path = f"{dirs['annotated_dir']}/annotated_{iteration}.png"
                 annotator.draw_bounding_boxes(screenshot_path, bounding_boxes, annotated_path)
                 logger.info(f"Annotated screenshot saved: {annotated_path}")
                 

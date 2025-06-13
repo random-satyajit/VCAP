@@ -75,7 +75,7 @@ class AutomationGUI:
         
         # File handler
         os.makedirs("logs", exist_ok=True)
-        file_handler = logging.FileHandler(f"logs/gui_run_{time.strftime('%Y%m%d_%H%M%S')}.log")
+        file_handler = logging.FileHandler(f"logs/gui_run_{time.strftime('%Y_%m_%d__%H_%M_%S')}.log")
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(file_formatter)
         self.logger.addHandler(file_handler)
@@ -323,29 +323,51 @@ class AutomationGUI:
         self.log_area.config(state=tk.DISABLED)
 
     def open_logs_folder(self):
-        """Open the logs folder in file explorer"""
-        game_logs_path = os.path.abspath(f"logs/{self.game_name}" if self.game_name else "logs")
-        os.makedirs(game_logs_path, exist_ok=True)
+        """Open the logs folder for the current or most recent run"""
+        if hasattr(self, 'current_run_dir') and self.current_run_dir:
+            folder_path = os.path.abspath(self.current_run_dir)
+        else:
+            # Find most recent run folder
+            game_dir = f"logs/{self.game_name}" if self.game_name else "logs"
+            os.makedirs(game_dir, exist_ok=True)
+            
+            run_folders = [f for f in os.listdir(game_dir) if f.startswith("run_")]
+            if run_folders:
+                latest_run = max(run_folders)  # This works because timestamps are YYYYMMDD_HHMMSS format
+                folder_path = os.path.abspath(f"{game_dir}/{latest_run}")
+            else:
+                folder_path = os.path.abspath(game_dir)
         
         # Platform-specific way to open folder
         if sys.platform == 'win32':
-            os.startfile(game_logs_path)
+            os.startfile(folder_path)
         elif sys.platform == 'darwin':  # macOS
             import subprocess
-            subprocess.Popen(['open', game_logs_path])
+            subprocess.Popen(['open', folder_path])
         else:  # Linux
             import subprocess
-            subprocess.Popen(['xdg-open', game_logs_path])
+            subprocess.Popen(['xdg-open', folder_path])
 
     def open_latest_screenshot(self):
-        """Open the latest annotated screenshot"""
-        screenshots_dir = os.path.abspath(f"logs/{self.game_name}/annotated" if self.game_name else "logs/annotated")
+        """Open the latest annotated screenshot from the current or most recent run"""
+        if hasattr(self, 'current_run_dir') and self.current_run_dir:
+            screenshots_dir = os.path.abspath(f"{self.current_run_dir}/annotated")
+        else:
+            # Find most recent run folder
+            game_dir = f"logs/{self.game_name}" if self.game_name else "logs"
+            run_folders = [f for f in os.listdir(game_dir) if f.startswith("run_")]
+            if run_folders:
+                latest_run = max(run_folders)
+                screenshots_dir = os.path.abspath(f"{game_dir}/{latest_run}/annotated")
+            else:
+                screenshots_dir = os.path.abspath(f"{game_dir}/annotated")
+        
         os.makedirs(screenshots_dir, exist_ok=True)
         
         # Find the latest screenshot
         try:
             files = [os.path.join(screenshots_dir, f) for f in os.listdir(screenshots_dir) 
-                     if f.startswith("annotated_") and f.endswith(".png")]
+                    if f.startswith("annotated_") and f.endswith(".png")]
             if files:
                 latest_file = max(files, key=os.path.getmtime)
                 
@@ -423,6 +445,7 @@ class AutomationGUI:
             # Import here to avoid circular imports
             import sys
             import time
+            import datetime
             from modules.network import NetworkManager
             from modules.screenshot import ScreenshotManager
             from modules.gemma_client import GemmaClient
@@ -431,14 +454,34 @@ class AutomationGUI:
             from modules.annotator import Annotator
             from modules.config_parser import ConfigParser
             from modules.decision_engine import DecisionEngine
-            from modules.game_launcher import GameLauncher
+            from modules.game_launcher import GameLauncher  # Fixed typo: GameLauncherr -> GameLauncher
             
+            # Create timestamp for this run
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
             # Create game-specific directory structure
             os.makedirs("logs", exist_ok=True)
             game_dir = f"logs/{self.game_name}" if self.game_name else "logs"
             os.makedirs(game_dir, exist_ok=True)
-            os.makedirs(f"{game_dir}/screenshots", exist_ok=True)
-            os.makedirs(f"{game_dir}/annotated", exist_ok=True)
+
+            # Create run-specific directory
+            run_dir = f"{game_dir}/run_{timestamp}"
+            os.makedirs(run_dir, exist_ok=True)
+            os.makedirs(f"{run_dir}/screenshots", exist_ok=True)
+            os.makedirs(f"{run_dir}/annotated", exist_ok=True)
+            
+            # Store the current run directory for later use
+            self.current_run_dir = run_dir
+            
+            # Set up run-specific logging
+            run_log_file = f"{run_dir}/automation.log"
+            run_file_handler = logging.FileHandler(run_log_file)
+            run_file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            run_file_handler.setFormatter(run_file_formatter)
+            logging.getLogger().addHandler(run_file_handler)
+            
+            self.logger.info(f"Created run directory: {run_dir}")
+            self.logger.info(f"Logs will be saved to: {run_log_file}")
             
             # Initialize components
             self.logger.info(f"Connecting to SUT at {self.sut_ip.get()}:{self.sut_port.get()}")
@@ -464,7 +507,7 @@ class AutomationGUI:
             game_launcher = GameLauncher(network)
             
             # Get game metadata
-            game_metadata = config_parser.get_game_metadata().get("metadata", {})
+            game_metadata = config_parser.get_config().get("metadata", {})  # Fixed to use get_config() directly
             self.logger.info(f"Game metadata loaded: {game_metadata}")
             benchmark_duration = game_metadata.get("benchmark_duration", 120)
             startup_wait = game_metadata.get("startup_wait", 30)
@@ -524,8 +567,8 @@ class AutomationGUI:
                         state_start_time = time.time()
                         continue
                     
-                    # Capture screenshot
-                    screenshot_path = f"{game_dir}/screenshots/screenshot_{iteration}.png"
+                    # Capture screenshot - USE RUN-SPECIFIC DIRECTORY
+                    screenshot_path = f"{run_dir}/screenshots/screenshot_{iteration}.png"
                     screenshot_mgr.capture(screenshot_path)
                     self.logger.info(f"Screenshot captured: {screenshot_path}")
                     
@@ -533,8 +576,8 @@ class AutomationGUI:
                     bounding_boxes = vision_model.detect_ui_elements(screenshot_path)
                     self.logger.info(f"Detected {len(bounding_boxes)} UI elements")
                     
-                    # Annotate screenshot
-                    annotated_path = f"{game_dir}/annotated/annotated_{iteration}.png"
+                    # Annotate screenshot - USE RUN-SPECIFIC DIRECTORY
+                    annotated_path = f"{run_dir}/annotated/annotated_{iteration}.png"
                     annotator.draw_bounding_boxes(screenshot_path, bounding_boxes, annotated_path)
                     self.logger.info(f"Annotated screenshot saved: {annotated_path}")
                     
@@ -609,6 +652,10 @@ class AutomationGUI:
                 network.close()
             if 'vision_model' in locals() and hasattr(vision_model, 'close'):
                 vision_model.close()
+            
+            # Remove the run-specific log handler
+            if 'run_file_handler' in locals():
+                logging.getLogger().removeHandler(run_file_handler)
             
             # Reset GUI state
             self.running = False

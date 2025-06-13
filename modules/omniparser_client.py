@@ -30,6 +30,9 @@ class OmniparserClient:
         """
         self.api_url = api_url
         self.session = requests.Session()
+        # Assuming 1920x1080 resolution - adjust as needed for your target resolution
+        self.screen_width = 1920
+        self.screen_height = 1080
         logger.info(f"OmniparserClient initialized with API URL: {api_url}")
         
         # Test connection to the API
@@ -62,58 +65,65 @@ class OmniparserClient:
     def _parse_omniparser_response(self, response_data: Dict) -> List[BoundingBox]:
         """
         Parse the response from Omniparser into BoundingBox objects.
+        
+        Args:
+            response_data: Response JSON from Omniparser
+            
+        Returns:
+            List of BoundingBox objects
         """
         bounding_boxes = []
         
-        # Log structure of response
-        if "parsed_content_list" in response_data:
-            content_list = response_data.get("parsed_content_list", [])
-            logger.info(f"Omniparser returned {len(content_list)} items in parsed_content_list")
-            
-            # Print the first item as sample if available
-            if content_list and len(content_list) > 0:
-                logger.info(f"First item example: {json.dumps(content_list[0], indent=2)}")
-        else:
-            logger.warning("Response doesn't contain 'parsed_content_list' key")
-            logger.info(f"Available keys: {list(response_data.keys())}")
-        
         # Extract parsed content list from response
         parsed_content_list = response_data.get("parsed_content_list", [])
+        logger.info(f"Omniparser returned {len(parsed_content_list)} items in parsed_content_list")
         
+        # Log first item as sample if available
+        if parsed_content_list and len(parsed_content_list) > 0:
+            logger.info(f"First item example: {json.dumps(parsed_content_list[0], indent=2)}")
+        
+        # Process each detected element
         for i, element in enumerate(parsed_content_list):
-            # Extract coordinates and metadata
             try:
-                # Log each element format for debugging
-                logger.info(f"Processing element {i}: keys={list(element.keys())}")
-                
-                # Check how coordinates are stored
-                if 'box_xyxy' in element:
-                    box_coords = element['box_xyxy']
-                    logger.info(f"Found box_xyxy format: {box_coords}")
-                    x1, y1, x2, y2 = box_coords
+                # Process only elements that have bbox data
+                if 'bbox' in element:
+                    # Get normalized coordinates (0-1 range)
+                    bbox_coords = element['bbox']
+                    logger.debug(f"Element {i} bbox: {bbox_coords}")
                     
-                    # Convert to our BoundingBox format
-                    bbox = BoundingBox(
-                        x=int(x1),
-                        y=int(y1),
-                        width=int(x2 - x1),
-                        height=int(y2 - y1),
-                        confidence=element.get('score', 0.9),
-                        element_type=element.get('class', 'unknown'),
-                        element_text=element.get('ocr', '')
-                    )
-                    bounding_boxes.append(bbox)
-                elif 'bbox' in element:
-                    # Alternative format
-                    logger.info(f"Found bbox format: {element['bbox']}")
-                    # Process alternative format...
+                    # Omniparser uses normalized coordinates [x1, y1, x2, y2]
+                    x1, y1, x2, y2 = bbox_coords
+                    
+                    # Convert normalized to absolute coordinates
+                    abs_x1 = int(x1 * self.screen_width)
+                    abs_y1 = int(y1 * self.screen_height)
+                    abs_x2 = int(x2 * self.screen_width)
+                    abs_y2 = int(y2 * self.screen_height)
+                    
+                    # Check for interactivity - prefer interactive elements
+                    is_interactive = element.get('interactivity', False)
+                    
+                    # Only include interactive elements if they have content
+                    if is_interactive and element.get('content'):
+                        # Create BoundingBox object
+                        bbox = BoundingBox(
+                            x=abs_x1,
+                            y=abs_y1,
+                            width=abs_x2 - abs_x1,
+                            height=abs_y2 - abs_y1,
+                            confidence=1.0,  # Set to 1.0 since Omniparser doesn't provide confidence
+                            element_type=element.get('type', 'unknown'),
+                            element_text=element.get('content', '')
+                        )
+                        bounding_boxes.append(bbox)
+                        logger.debug(f"Added interactive element: {element.get('content')}")
                 else:
-                    logger.warning(f"No recognized box format in element: {list(element.keys())}")
+                    logger.debug(f"Element {i} has no bbox field, skipping")
                     
             except (KeyError, ValueError, IndexError) as e:
                 logger.warning(f"Error parsing element {i}: {str(e)}")
         
-        logger.info(f"Successfully extracted {len(bounding_boxes)} bounding boxes")
+        logger.info(f"Successfully extracted {len(bounding_boxes)} interactive UI elements")
         return bounding_boxes
     
     def _format_bounding_boxes(self, bboxes: List[BoundingBox]) -> str:
@@ -137,7 +147,7 @@ class OmniparserClient:
                 element_text = element_text[:27] + "..."
                 
             formatted.append(
-                f"[{i+1}] {bbox.element_type} (conf: {bbox.confidence:.2f}) at ({bbox.x},{bbox.y},{bbox.width}x{bbox.height}): '{element_text}'"
+                f"[{i+1}] {bbox.element_type} at ({bbox.x},{bbox.y},{bbox.width}x{bbox.height}): '{element_text}'"
             )
         
         return "\n".join(formatted)
@@ -194,15 +204,6 @@ class OmniparserClient:
                 json.dump(clean_response, json_file, indent=2)
             logger.info(f"Saved clean Omniparser JSON response to {json_path}")
 
-            # Log a clean version of the response (without the giant base64 string)
-            logger.info(f"***OMNIPARSER RESPONSE SUMMARY***:")
-            logger.info(f"Response keys: {list(response_data.keys())}")
-            if "parsed_content_list" in response_data:
-                parsed_items = response_data["parsed_content_list"]
-                logger.info(f"Found {len(parsed_items)} UI elements")
-                if parsed_items and len(parsed_items) > 0:
-                    logger.info(f"First element example: {json.dumps(parsed_items[0], indent=2)}")
-            
             # Log performance metrics if available
             if "latency" in response_data:
                 logger.info(f"Omniparser processing time: {response_data['latency']:.2f} seconds")
@@ -224,7 +225,17 @@ class OmniparserClient:
                 except Exception as e:
                     logger.warning(f"Failed to save annotated image: {str(e)}")
             
-            # Log detected elements
+            # Log decision engine input data
+            logger.info("=== DECISION ENGINE INPUT DATA ===")
+            logger.info(f"Sending {len(bounding_boxes)} UI elements to decision engine:")
+            for i, bbox in enumerate(bounding_boxes):
+                logger.info(f"  Element {i+1}:")
+                logger.info(f"    Type: {bbox.element_type}")
+                logger.info(f"    Text: '{bbox.element_text}'")
+                logger.info(f"    Position: (x={bbox.x}, y={bbox.y}, w={bbox.width}, h={bbox.height})")
+            logger.info("=== END OF DECISION ENGINE INPUT ===")
+            
+            # Log detected elements in compact format
             formatted_boxes = self._format_bounding_boxes(bounding_boxes)
             logger.info(f"Detected {len(bounding_boxes)} UI elements in {image_path}:")
             for line in formatted_boxes.split('\n'):
