@@ -80,7 +80,7 @@ class OmniparserClient:
         
         # Log first item as sample if available
         if parsed_content_list and len(parsed_content_list) > 0:
-            logger.info(f"First item example: {json.dumps(parsed_content_list[0], indent=2)}")
+            logger.debug(f"First item example: {json.dumps(parsed_content_list[0], indent=2)}")
         
         # Process each detected element
         for i, element in enumerate(parsed_content_list):
@@ -226,21 +226,21 @@ class OmniparserClient:
                     logger.warning(f"Failed to save annotated image: {str(e)}")
             
             # Log decision engine input data
-            logger.info("=== DECISION ENGINE INPUT DATA ===")
-            logger.info(f"Sending {len(bounding_boxes)} UI elements to decision engine:")
+            logger.debug("=== DECISION ENGINE INPUT DATA ===")
+            logger.debug(f"Sending {len(bounding_boxes)} UI elements to decision engine:")
             for i, bbox in enumerate(bounding_boxes):
-                logger.info(f"  Element {i+1}:")
-                logger.info(f"    Type: {bbox.element_type}")
-                logger.info(f"    Text: '{bbox.element_text}'")
-                logger.info(f"    Position: (x={bbox.x}, y={bbox.y}, w={bbox.width}, h={bbox.height})")
-            logger.info("=== END OF DECISION ENGINE INPUT ===")
-            
+                logger.debug(f"  Element {i+1}:")
+                logger.debug(f"    Type: {bbox.element_type}")
+                logger.debug(f"    Text: '{bbox.element_text}'")
+                logger.debug(f"    Position: (x={bbox.x}, y={bbox.y}, w={bbox.width}, h={bbox.height})")
+            logger.debug("=== END OF DECISION ENGINE INPUT ===")
+
             # Log detected elements in compact format
             formatted_boxes = self._format_bounding_boxes(bounding_boxes)
             logger.info(f"Detected {len(bounding_boxes)} UI elements in {image_path}:")
             for line in formatted_boxes.split('\n'):
                 logger.info(f"  {line}")
-            
+
             return bounding_boxes
             
         except requests.RequestException as e:

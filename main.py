@@ -308,7 +308,23 @@ def main():
                 # Execute action
                 if next_action:
                     logger.info(f"Executing action: {action_str}")
-                    network.send_action(next_action)
+                    
+                    # Handle "wait" actions locally instead of sending to SUT
+                    if next_action.get("type") == "wait":
+                        duration = next_action.get("duration", 1)
+                        logger.info(f"Waiting for {duration} seconds...")
+                        
+                        # Simple wait for main.py (no interruption check needed)
+                        for i in range(duration):
+                            time.sleep(1)
+                            if i % 10 == 0 and i > 0:  # Log every 10 seconds for long waits
+                                logger.info(f"Still waiting... {i}/{duration} seconds elapsed")
+                                
+                        logger.info(f"Wait completed")
+                    else:
+                        # Send other action types to SUT
+                        network.send_action(next_action)
+                        
                     logger.info(f"Action completed: {action_str}")
                 
                 # Update state

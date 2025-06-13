@@ -69,7 +69,7 @@ class DecisionEngine:
         return self.target_state
     
     def _find_matching_element(self, state_def: Dict[str, Any], 
-                              bounding_boxes: List[BoundingBox]) -> Optional[BoundingBox]:
+                          bounding_boxes: List[BoundingBox]) -> Optional[BoundingBox]:
         """
         Find a UI element that matches the state definition with flexible matching.
         
@@ -80,19 +80,62 @@ class DecisionEngine:
         Returns:
             Matching BoundingBox or None if no match
         """
+        # First check if any excluded elements are present
+        exclude_elements = state_def.get("exclude_elements", [])
+        for excluded in exclude_elements:
+            excl_type = excluded.get("type", "any")
+            excl_text = excluded.get("text", "")
+            excl_match_type = excluded.get("text_match", "exact")
+            
+            for bbox in bounding_boxes:
+                # Type matching for excluded elements
+                type_match = (excl_type == "any" or 
+                            not excl_type or 
+                            bbox.element_type == excl_type)
+                
+                # Text matching for excluded elements
+                text_match = False
+                if bbox.element_text and excl_text:
+                    if excl_match_type == "exact":
+                        text_match = excl_text.lower() == bbox.element_text.lower()
+                    elif excl_match_type == "contains":
+                        text_match = excl_text.lower() in bbox.element_text.lower()
+                    elif excl_match_type == "startswith":
+                        text_match = bbox.element_text.lower().startswith(excl_text.lower())
+                    elif excl_match_type == "endswith":
+                        text_match = bbox.element_text.lower().endswith(excl_text.lower())
+                elif not excl_text:
+                    text_match = True
+                    
+                if type_match and text_match:
+                    # Found an excluded element - this state cannot be a match
+                    excluded_details = f"type: '{bbox.element_type}', text: '{bbox.element_text}'"
+                    logger.info(f"Found excluded element: {excluded_details} - state cannot be matched")
+                    return None
+        
+        # Now check for required elements
         required_elements = state_def.get("required_elements", [])
         
+        # If we have no required elements, but passed the exclusion check, it's a match
+        if not required_elements:
+            logger.debug("No required elements specified, and no excluded elements found")
+            return BoundingBox(x=0, y=0, width=0, height=0, confidence=1.0, 
+                            element_type="dummy", element_text="No required elements")
+        
+        # Check each required element
         for required in required_elements:
             req_type = required.get("type", "any")
             req_text = required.get("text", "")
             text_match_type = required.get("text_match", "exact")
             min_confidence = required.get("required_confidence", 0.6)
             
+            # Try to find a matching element
+            matched = False
             for bbox in bounding_boxes:
                 # Type matching - handle "any" type
                 type_match = (req_type == "any" or 
-                             not req_type or 
-                             bbox.element_type == req_type)
+                            not req_type or 
+                            bbox.element_type == req_type)
                 
                 # Text matching with different strategies
                 text_match = False
@@ -115,11 +158,17 @@ class DecisionEngine:
                     match_details = f"type: '{bbox.element_type}', text: '{bbox.element_text}'"
                     required_details = f"required type: '{req_type}', required text: '{req_text}'"
                     logger.info(f"Found matching element: {match_details} matches {required_details}")
-                    return bbox
+                    matched = True
+                    matching_bbox = bbox
+                    break
+            
+            # If any required element is not found, the state doesn't match
+            if not matched:
+                logger.debug(f"Required element not found: {required}")
+                return None
         
-        if required_elements:
-            logger.debug(f"No UI elements matched the requirements: {required_elements}")
-        return None
+        # If we get here, all required elements were found and no excluded elements were found
+        return matching_bbox
     
     def _identify_current_state(self, bounding_boxes: List[BoundingBox]) -> str:
         """

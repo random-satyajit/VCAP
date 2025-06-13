@@ -604,7 +604,26 @@ class AutomationGUI:
                     # Execute action
                     if next_action and not self.stop_event.is_set():
                         self.logger.info(f"Executing action: {action_str}")
-                        network.send_action(next_action)
+                        
+                        # Handle "wait" actions locally instead of sending to SUT
+                        if next_action.get("type") == "wait":
+                            duration = next_action.get("duration", 1)
+                            self.logger.info(f"Waiting for {duration} seconds...")
+                            
+                            # Wait in small increments so we can check for stop events
+                            for i in range(duration):
+                                if self.stop_event.is_set():
+                                    self.logger.info("Wait interrupted by stop event")
+                                    break
+                                time.sleep(1)
+                                if i % 10 == 0 and i > 0:  # Log every 10 seconds for long waits
+                                    self.logger.info(f"Still waiting... {i}/{duration} seconds elapsed")
+                                    
+                            self.logger.info(f"Wait completed")
+                        else:
+                            # Send other action types to SUT
+                            network.send_action(next_action)
+                            
                         self.logger.info(f"Action completed: {action_str}")
                     
                     # Update state

@@ -1,74 +1,32 @@
-# UI Flow Configuration for CS2 Benchmark
-# This YAML file defines the UI states and transitions for navigating 
-# CS2's menu system to run a benchmark
+# CS2 Benchmark Configuration - Simplified 2-Step Version
+metadata:
+  game_name: "Counter-Strike 2"
+  version: "1.0"
+  startup_wait: 35
 
-# Name of the initial state
 initial_state: "main_menu"
-
-# Name of the target/end state
-target_state: "benchmark_complete"
+target_state: "play_menu"  # Just targeting the first transition for now
 
 # Definitions of UI states and their identifying elements
 states:
-  initial:
-    description: "Initial loading state"
-    required_elements: []
-    timeout: 60  # Allow up to 60 seconds for game to load
-
   main_menu:
-    description: "CS2 Main Menu"
+    description: "CS2 Main Menu with PLAY button"
     required_elements:
-      - type: "label"
+      - type: "icon"  # Use specific type "icon" instead of "any"
         text: "PLAY"
-      # - type: "label"
-      #   text: "INVENTORY"
-      # - type: "label"
-      #   text: "LOADOUT"
-      # - type: "label"
-      #   text: "STORE"
+        text_match: "contains"
+      - type: "icon"  # Also require other menu buttons to be sure
+        text: "INVENTORY"
+        text_match: "contains"
     timeout: 30
 
   play_menu:
-    description: "Play menu screen"
+    description: "Play menu screen with WORKSHOP MAPS"
     required_elements:
-      # - type: "label"
-      #   text: "MATCHMAKING"
-      # - type: "label"
-      #   text: "PRACTICE"
-      - type: "label"
+      - type: "icon"
         text: "WORKSHOP MAPS"
+        text_match: "contains"
     timeout: 20
-
-  workshop_maps:
-    description: "Workshop maps selection screen"
-    required_elements:
-      - type: "label"
-        text: "Filter Maps"
-      - type: "label"
-        text: "CS2 FPS Bench"
-    timeout: 30
-
-  map_selection:
-    description: "Map selection with GO button"
-    required_elements:
-      - type: "button"
-        text: "GO"
-    timeout: 30
-
-  loading_benchmark:
-    description: "Loading benchmark map"
-    required_elements: []  # This state might not have consistent UI elements
-    timeout: 60
-
-  benchmark_running:
-    description: "Benchmark is currently running"
-    required_elements: []  # The benchmark might not have consistent UI elements to detect
-    timeout: 120  # This should be longer than the benchmark duration
-
-  benchmark_complete:
-    description: "Benchmark has completed"
-    required_elements: []  # The end state might be detected by timeout
-    timeout: 10
 
 # State transition definitions
 transitions:
@@ -76,58 +34,15 @@ transitions:
   "main_menu->play_menu":
     action: "click"
     target:
-      type: "label"
+      type: "icon"
       text: "PLAY"
-    expected_delay: 2  # Expected delay in seconds before new state
-
-  # From play menu to workshop maps
-  "play_menu->workshop_maps":
-    action: "click"
-    target:
-      type: "label"
-      text: "WORKSHOP MAPS"
-    expected_delay: 3
-
-  # From workshop maps to map selection
-  "workshop_maps->map_selection":
-    action: "click"
-    target:
-      type: "label"
-      text: "CS2 FPS Bench"
+      text_match: "contains"
     expected_delay: 2
-
-  # From map selection to loading benchmark
-  "map_selection->loading_benchmark":
-    action: "click"
-    target:
-      type: "button"
-      text: "GO"
-    expected_delay: 5
-
-  # From loading benchmark to benchmark running
-  "loading_benchmark->benchmark_running":
-    action: "wait"
-    duration: 10  # Wait for benchmark to start
-    expected_delay: 10
-
-  # From benchmark running to benchmark complete
-  "benchmark_running->benchmark_complete":
-    action: "wait"
-    duration: 110  # Wait for the benchmark to finish (110 seconds as specified)
-    expected_delay: 0
 
 # Fallback actions for error recovery
 fallbacks:
-  # Generic escape key press as fallback
   general:
     action: "key"
-    key: "escape"
+    key: "Escape"
     expected_delay: 1
     max_retries: 3
-
-  # If in an unknown state, press escape and wait
-  unknown:
-    action: "key"
-    key: "escape"
-    expected_delay: 2
-    max_retries: 5
