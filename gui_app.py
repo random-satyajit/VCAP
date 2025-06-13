@@ -36,7 +36,7 @@ class AutomationGUI:
         self.sut_port = tk.StringVar(value="8080")
         self.game_path = tk.StringVar()
         self.lm_studio_url = tk.StringVar(value="http://127.0.0.1:1234")
-        self.config_path = tk.StringVar(value="config/games/cs2_benchmark.yaml")
+        self.config_path = tk.StringVar(value="config/games/cs2_simple.yaml")
         self.max_iterations = tk.StringVar(value="50")
         self.vision_model = tk.StringVar(value="gemma")  # Default to Gemma
         self.omniparser_url = tk.StringVar(value="http://localhost:8000")  # Default Omniparser URL
@@ -181,6 +181,14 @@ class AutomationGUI:
         ttk.Label(self.game_info_frame, text="Game Info:").pack(side=tk.LEFT, padx=5)
         self.game_info_label = ttk.Label(self.game_info_frame, text="No game selected", foreground="blue")
         self.game_info_label.pack(side=tk.LEFT, padx=5)
+
+        # ---- ROW 5: Simple Mode Toggle ----
+        simple_mode_frame = ttk.Frame(settings_frame)
+        simple_mode_frame.grid(row=5, column=0, columnspan=6, sticky=tk.W+tk.E, padx=5, pady=5)
+        self.use_simple_mode = tk.BooleanVar(value=True)  # Default to simple mode
+        ttk.Checkbutton(simple_mode_frame, text="Use Simple Step-Based Mode", 
+                        variable=self.use_simple_mode).pack(side=tk.LEFT, padx=5)
+        ttk.Label(simple_mode_frame, text="(Recommended for more reliable automation)").pack(side=tk.LEFT)
         
         # ===== ACTION BUTTONS =====
         button_frame = ttk.Frame(left_pane)
@@ -446,6 +454,7 @@ class AutomationGUI:
             import sys
             import time
             import datetime
+            import yaml
             from modules.network import NetworkManager
             from modules.screenshot import ScreenshotManager
             from modules.gemma_client import GemmaClient
@@ -453,8 +462,12 @@ class AutomationGUI:
             from modules.omniparser_client import OmniparserClient
             from modules.annotator import Annotator
             from modules.config_parser import ConfigParser
+            from modules.simple_config_parser import SimpleConfigParser
             from modules.decision_engine import DecisionEngine
-            from modules.game_launcher import GameLauncher  # Fixed typo: GameLauncherr -> GameLauncher
+            from modules.game_launcher import GameLauncher
+            
+            # Import simple automation (new)
+            from modules.simple_automation import SimpleAutomation
             
             # Create timestamp for this run
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -507,19 +520,10 @@ class AutomationGUI:
             game_launcher = GameLauncher(network)
             
             # Get game metadata
-            game_metadata = config_parser.get_config().get("metadata", {})  # Fixed to use get_config() directly
+            game_metadata = config_parser.get_config().get("metadata", {})
             self.logger.info(f"Game metadata loaded: {game_metadata}")
             benchmark_duration = game_metadata.get("benchmark_duration", 120)
             startup_wait = game_metadata.get("startup_wait", 30)
-            
-            # Main execution loop
-            iteration = 0
-            current_state = "initial"
-            target_state = decision_engine.get_target_state()
-            
-            # Track time spent in each state to detect timeouts
-            state_start_time = time.time()
-            max_time_in_state = 60  # Default maximum seconds to remain in the same state
             
             try:
                 # Launch the game
@@ -541,122 +545,162 @@ class AutomationGUI:
                     
                 self.status_label.config(text="Running", foreground="green")
                 
-                while current_state != target_state and iteration < int(self.max_iterations.get()) and not self.stop_event.is_set():
-                    iteration += 1
-                    self.logger.info(f"Iteration {iteration}: Current state: {current_state}")
+                # Check which automation mode to use
+                if hasattr(self, 'use_simple_mode') and self.use_simple_mode.get():
+                    # Use simple step-based automation
+                    self.logger.info("Using simple step-based automation")
                     
-                    # Get state-specific timeout
-                    state_def = config_parser.get_state_definition(current_state)
-                    state_timeout = state_def.get("timeout", max_time_in_state) if state_def else max_time_in_state
-                    
-                    # Check for timeout in current state
-                    time_in_state = time.time() - state_start_time
-                    if time_in_state > state_timeout:
-                        self.logger.warning(f"Timeout in state {current_state} after {time_in_state:.1f} seconds (limit: {state_timeout}s)")
-                        
-                        # Get fallback action
-                        fallback_action = decision_engine.get_fallback_action(current_state)
-                        self.logger.info(f"Using fallback action for timeout: {fallback_action}")
-                        
-                        # Execute fallback action
-                        network.send_action(fallback_action)
-                        self.logger.info("Executed timeout recovery action")
-                        time.sleep(2)
-                        
-                        # Reset timeout timer
-                        state_start_time = time.time()
-                        continue
-                    
-                    # Capture screenshot - USE RUN-SPECIFIC DIRECTORY
-                    screenshot_path = f"{run_dir}/screenshots/screenshot_{iteration}.png"
-                    screenshot_mgr.capture(screenshot_path)
-                    self.logger.info(f"Screenshot captured: {screenshot_path}")
-                    
-                    # Process with vision model
-                    bounding_boxes = vision_model.detect_ui_elements(screenshot_path)
-                    self.logger.info(f"Detected {len(bounding_boxes)} UI elements")
-                    
-                    # Annotate screenshot - USE RUN-SPECIFIC DIRECTORY
-                    annotated_path = f"{run_dir}/annotated/annotated_{iteration}.png"
-                    annotator.draw_bounding_boxes(screenshot_path, bounding_boxes, annotated_path)
-                    self.logger.info(f"Annotated screenshot saved: {annotated_path}")
-                    
-                    # Determine next action
-                    previous_state = current_state
-                    next_action, new_state = decision_engine.determine_next_action(
-                        current_state, bounding_boxes
+                    # Configure simple automation with run-specific directory
+                    simple_auto = SimpleAutomation(
+                        config_path=self.config_path.get(),
+                        network=network,
+                        screenshot_mgr=screenshot_mgr,
+                        vision_model=vision_model,
+                        stop_event=self.stop_event,
+                        run_dir=run_dir,
+                        annotator=annotator
                     )
                     
-                    # Format the action for better logging
-                    action_str = ""
-                    if next_action:
-                        if next_action.get("type") == "click":
-                            action_str = f"Click at ({next_action.get('x')}, {next_action.get('y')})"
-                        elif next_action.get("type") == "key":
-                            action_str = f"Press key {next_action.get('key')}"
-                        elif next_action.get("type") == "wait":
-                            action_str = f"Wait for {next_action.get('duration')} seconds"
-                        else:
-                            action_str = str(next_action)
-                            
-                    self.logger.info(f"Next action: {action_str}, transitioning to state: {new_state}")
+                    # Run the simple automation
+                    success = simple_auto.run()
                     
-                    # Execute action
-                    if next_action and not self.stop_event.is_set():
-                        self.logger.info(f"Executing action: {action_str}")
-                        
-                        # Handle "wait" actions locally instead of sending to SUT
-                        if next_action.get("type") == "wait":
-                            duration = next_action.get("duration", 1)
-                            self.logger.info(f"Waiting for {duration} seconds...")
-                            
-                            # Wait in small increments so we can check for stop events
-                            for i in range(duration):
-                                if self.stop_event.is_set():
-                                    self.logger.info("Wait interrupted by stop event")
-                                    break
-                                time.sleep(1)
-                                if i % 10 == 0 and i > 0:  # Log every 10 seconds for long waits
-                                    self.logger.info(f"Still waiting... {i}/{duration} seconds elapsed")
-                                    
-                            self.logger.info(f"Wait completed")
-                        else:
-                            # Send other action types to SUT
-                            network.send_action(next_action)
-                            
-                        self.logger.info(f"Action completed: {action_str}")
+                    # Update UI based on result
+                    if success:
+                        self.status_label.config(text="Completed", foreground="green")
+                    elif self.stop_event.is_set():
+                        self.status_label.config(text="Stopped", foreground="red")
+                    else:
+                        self.status_label.config(text="Failed", foreground="red")
                     
-                    # Update state
-                    current_state = new_state
-                    if previous_state != current_state:
-                        # Reset timeout timer when state changes
-                        state_start_time = time.time()
-                        self.logger.info(f"State changed from {previous_state} to {current_state}")
-                    
-                    # Get delay from transition if specified
-                    transition_key = f"{previous_state}->{current_state}"
-                    transition = config_parser.get_config().get("transitions", {}).get(transition_key, {})
-                    delay = transition.get("expected_delay", 1)
-                    
-                    time.sleep(delay)  # Wait before next iteration
-                
-                # Check if we reached the target state
-                if current_state == target_state:
-                    self.logger.info(f"Successfully reached target state: {target_state}")
-                    
-                    # Report benchmark results if available
-                    if hasattr(decision_engine, "state_context") and "benchmark_duration" in decision_engine.state_context:
-                        benchmark_duration = decision_engine.state_context["benchmark_duration"]
-                        self.logger.info(f"Benchmark completed in {benchmark_duration:.2f} seconds")
-                        
-                    self.status_label.config(text="Completed", foreground="green")
-                elif self.stop_event.is_set():
-                    self.logger.info("Automation process was manually stopped")
-                    self.status_label.config(text="Stopped", foreground="red")
                 else:
-                    self.logger.warning(f"Failed to reach target state. Stopped at: {current_state}")
-                    self.status_label.config(text="Failed", foreground="red")
-                
+                    # Use existing state machine approach
+                    self.logger.info("Using state machine-based automation")
+                    
+                    # Main execution loop - existing implementation
+                    iteration = 0
+                    current_state = "initial"
+                    target_state = decision_engine.get_target_state()
+                    
+                    # Track time spent in each state to detect timeouts
+                    state_start_time = time.time()
+                    max_time_in_state = 60  # Default maximum seconds to remain in the same state
+                    
+                    while current_state != target_state and iteration < int(self.max_iterations.get()) and not self.stop_event.is_set():
+                        iteration += 1
+                        self.logger.info(f"Iteration {iteration}: Current state: {current_state}")
+                        
+                        # Get state-specific timeout
+                        state_def = config_parser.get_state_definition(current_state)
+                        state_timeout = state_def.get("timeout", max_time_in_state) if state_def else max_time_in_state
+                        
+                        # Check for timeout in current state
+                        time_in_state = time.time() - state_start_time
+                        if time_in_state > state_timeout:
+                            self.logger.warning(f"Timeout in state {current_state} after {time_in_state:.1f} seconds (limit: {state_timeout}s)")
+                            
+                            # Get fallback action
+                            fallback_action = decision_engine.get_fallback_action(current_state)
+                            self.logger.info(f"Using fallback action for timeout: {fallback_action}")
+                            
+                            # Execute fallback action
+                            network.send_action(fallback_action)
+                            self.logger.info("Executed timeout recovery action")
+                            time.sleep(2)
+                            
+                            # Reset timeout timer
+                            state_start_time = time.time()
+                            continue
+                        
+                        # Capture screenshot - USE RUN-SPECIFIC DIRECTORY
+                        screenshot_path = f"{run_dir}/screenshots/screenshot_{iteration}.png"
+                        screenshot_mgr.capture(screenshot_path)
+                        self.logger.info(f"Screenshot captured: {screenshot_path}")
+                        
+                        # Process with vision model
+                        bounding_boxes = vision_model.detect_ui_elements(screenshot_path)
+                        self.logger.info(f"Detected {len(bounding_boxes)} UI elements")
+                        
+                        # Annotate screenshot - USE RUN-SPECIFIC DIRECTORY
+                        annotated_path = f"{run_dir}/annotated/annotated_{iteration}.png"
+                        annotator.draw_bounding_boxes(screenshot_path, bounding_boxes, annotated_path)
+                        self.logger.info(f"Annotated screenshot saved: {annotated_path}")
+                        
+                        # Determine next action
+                        previous_state = current_state
+                        next_action, new_state = decision_engine.determine_next_action(
+                            current_state, bounding_boxes
+                        )
+                        
+                        # Format the action for better logging
+                        action_str = ""
+                        if next_action:
+                            if next_action.get("type") == "click":
+                                action_str = f"Click at ({next_action.get('x')}, {next_action.get('y')})"
+                            elif next_action.get("type") == "key":
+                                action_str = f"Press key {next_action.get('key')}"
+                            elif next_action.get("type") == "wait":
+                                action_str = f"Wait for {next_action.get('duration')} seconds"
+                            else:
+                                action_str = str(next_action)
+                                
+                        self.logger.info(f"Next action: {action_str}, transitioning to state: {new_state}")
+                        
+                        # Execute action
+                        if next_action and not self.stop_event.is_set():
+                            self.logger.info(f"Executing action: {action_str}")
+                            
+                            # Handle "wait" actions locally instead of sending to SUT
+                            if next_action.get("type") == "wait":
+                                duration = next_action.get("duration", 1)
+                                self.logger.info(f"Waiting for {duration} seconds...")
+                                
+                                # Wait in small increments so we can check for stop events
+                                for i in range(duration):
+                                    if self.stop_event.is_set():
+                                        self.logger.info("Wait interrupted by stop event")
+                                        break
+                                    time.sleep(1)
+                                    if i % 10 == 0 and i > 0:  # Log every 10 seconds for long waits
+                                        self.logger.info(f"Still waiting... {i}/{duration} seconds elapsed")
+                                        
+                                self.logger.info(f"Wait completed")
+                            else:
+                                # Send other action types to SUT
+                                network.send_action(next_action)
+                                
+                            self.logger.info(f"Action completed: {action_str}")
+                        
+                        # Update state
+                        current_state = new_state
+                        if previous_state != current_state:
+                            # Reset timeout timer when state changes
+                            state_start_time = time.time()
+                            self.logger.info(f"State changed from {previous_state} to {current_state}")
+                        
+                        # Get delay from transition if specified
+                        transition_key = f"{previous_state}->{current_state}"
+                        transition = config_parser.get_config().get("transitions", {}).get(transition_key, {})
+                        delay = transition.get("expected_delay", 1)
+                        
+                        time.sleep(delay)  # Wait before next iteration
+                    
+                    # Check if we reached the target state
+                    if current_state == target_state:
+                        self.logger.info(f"Successfully reached target state: {target_state}")
+                        
+                        # Report benchmark results if available
+                        if hasattr(decision_engine, "state_context") and "benchmark_duration" in decision_engine.state_context:
+                            benchmark_duration = decision_engine.state_context["benchmark_duration"]
+                            self.logger.info(f"Benchmark completed in {benchmark_duration:.2f} seconds")
+                            
+                        self.status_label.config(text="Completed", foreground="green")
+                    elif self.stop_event.is_set():
+                        self.logger.info("Automation process was manually stopped")
+                        self.status_label.config(text="Stopped", foreground="red")
+                    else:
+                        self.logger.warning(f"Failed to reach target state. Stopped at: {current_state}")
+                        self.status_label.config(text="Failed", foreground="red")
+                    
             except Exception as e:
                 self.logger.error(f"Error in main execution: {str(e)}", exc_info=True)
                 self.status_label.config(text="Error", foreground="red")

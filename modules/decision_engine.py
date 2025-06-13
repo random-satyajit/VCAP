@@ -172,62 +172,44 @@ class DecisionEngine:
     
     def _identify_current_state(self, bounding_boxes: List[BoundingBox]) -> str:
         """
-        Identify the current UI state based on detected elements with enhanced context awareness.
-        
-        Args:
-            bounding_boxes: List of detected UI elements
-        
-        Returns:
-            Name of the identified state or "unknown" if no match
+        Identify the current UI state based on detected elements, using a sequential approach.
+        First checks possible next states, then current state, then all states as fallback.
         """
-        # First, check if we're in a special context-sensitive state
-        if self.state_context.get("in_benchmark") and len(self.state_history) > 0:
-            prev_state = self.state_history[-1]
-            if prev_state == "benchmark_running":
-                if self._is_likely_benchmark_results(bounding_boxes):
-                    logger.info("Context detection: Identified benchmark_complete based on context")
-                    return "benchmark_complete"
+        # 1. FIRST: Check states we can directly transition to from current state
+        possible_next_states = []
+        for transition_key in self.transitions:
+            if transition_key.startswith(f"{self.current_state}->"):
+                next_state = transition_key.split("->")[1]
+                possible_next_states.append(next_state)
         
-        # Next, try to identify based on UI elements
-        matching_states = []
-        for state_name, state_def in self.states.items():
+        # Check these next states first (most likely states)
+        for state_name in possible_next_states:
+            state_def = self.states.get(state_name, {})
             if self._find_matching_element(state_def, bounding_boxes):
-                matching_states.append(state_name)
+                logger.info(f"Found matching next state: {state_name}")
+                return state_name
         
-        if not matching_states:
-            logger.warning("Could not identify current state from UI elements")
-            return "unknown"
+        # 2. SECOND: Check if we're still in current state
+        current_state_def = self.states.get(self.current_state, {})
+        if self._find_matching_element(current_state_def, bounding_boxes):
+            logger.info(f"Still in current state: {self.current_state}")
+            return self.current_state
         
-        # If only one match, return it
-        if len(matching_states) == 1:
-            logger.info(f"Identified current state: {matching_states[0]}")
-            return matching_states[0]
+        # 3. THIRD: As fallback, check all states (for recovery from unexpected situations)
+        logger.info("No expected state matched, checking all states as fallback")
+        for state_name, state_def in self.states.items():
+            # Skip states we already checked
+            if state_name == self.current_state or state_name in possible_next_states:
+                continue
+                
+            if self._find_matching_element(state_def, bounding_boxes):
+                logger.info(f"Found unexpected state: {state_name}")
+                return state_name
         
-        # Multiple matching states - use context to disambiguate
-        logger.info(f"Multiple matching states found: {matching_states}, using context to disambiguate")
+        # If no state matches, return unknown
+        logger.warning("Could not identify current state from UI elements")
+        return "unknown"
         
-        # Check sequence - prefer states that follow our current position in the workflow
-        if len(self.state_history) > 0:
-            current = self.state_history[-1]
-            for candidate in matching_states:
-                transition = f"{current}->{candidate}"
-                if transition in self.transitions:
-                    logger.info(f"Selected {candidate} based on valid transition from {current}")
-                    return candidate
-        
-        # Handle special case for states that appear multiple times in the flow
-        if "benchmark_running" in matching_states and "benchmark_complete" in matching_states:
-            if self.state_context.get("benchmark_run"):
-                logger.info("Context detection: This is post-benchmark state")
-                return "benchmark_complete"
-            else:
-                logger.info("Context detection: This is benchmark_running state")
-                return "benchmark_running"
-        
-        # Default to first match with a warning
-        logger.warning(f"Ambiguous state detection, selecting {matching_states[0]}")
-        return matching_states[0]
-    
     def _is_likely_benchmark_results(self, bounding_boxes: List[BoundingBox]) -> bool:
         """
         Determine if the current screen is likely showing benchmark results.
