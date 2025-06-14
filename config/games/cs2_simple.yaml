@@ -30,7 +30,7 @@ steps:
     verify_success:
       - type: "icon"
         text: "Filter Maps"
-    expected_delay: 3
+    expected_delay: 5
     timeout: 20
     
   3:
@@ -41,18 +41,19 @@ steps:
       text_match: "contains"
     verify_success:
       - type: "icon"
-        text: "6 0 "
-    expected_delay: 2
+        text: "GO "
+    expected_delay: 5
     timeout: 20
     
   4:
     description: "Click GO to start benchmark"
     find_and_click:
       type: "icon"
-      text: "6 0 "
-
-      text_match: "exact"
-    verify_success: []  # No specific elements to verify during loading
+      text: "GO "
+      text_match: "contains"
+    verify_success:
+      - type: "icon"
+        text: "de_dust2_benchmark "
     expected_delay: 5
     timeout: 20
     
