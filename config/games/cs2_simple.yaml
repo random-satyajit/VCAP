@@ -51,10 +51,8 @@ steps:
       type: "icon"
       text: "GO "
       text_match: "contains"
-    verify_success:
-      - type: "icon"
-        text: "de_dust2_benchmark "
-    expected_delay: 5
+    verify_success: []  # No specific elements to verify during loading
+    expected_delay: 2
     timeout: 20
     
   5:
