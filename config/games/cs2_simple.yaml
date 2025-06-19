@@ -55,8 +55,8 @@ steps:
       type: "icon"
       text: "GO "
       text_match: "contains"
-    verify_success: []  # No specific elements to verify during loading
-    expected_delay: 2
+    verify_success: [loading]  # No specific elements to verify during loading
+    expected_delay: 3
     timeout: 20
     
   5:
