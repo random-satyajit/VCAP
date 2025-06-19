@@ -1,9 +1,13 @@
 # cs2_simple_steps.yaml
 metadata:
   game_name: "Counter-Strike 2"
+  path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\bin\\win64\\cs2.exe"
   version: "1.0"
   benchmark_duration: 110
   startup_wait: 30
+  resolution: "1920x1080"
+  preset: "High"
+  
 
 # Simple step-by-step workflow
 steps:
