@@ -1,4 +1,4 @@
-# Katana - Game Automator
+# Katana/VCAP - Game Automator - Alpha Unstable WIP
 
 **An AI-Powered Game UI Navigation and Benchmarking System**
 
