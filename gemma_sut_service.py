@@ -99,8 +99,24 @@ def perform_action():
         if action_type == 'click':
             x = data.get('x', 0)
             y = data.get('y', 0)
-            logger.info(f"Performing click at ({x}, {y})")
-            pyautogui.click(x=x, y=y)
+            
+            # Get optional parameters for movement customization
+            move_duration = data.get('move_duration', 0.5)  # Default 0.5 seconds for smooth movement
+            click_delay = data.get('click_delay', 1.0)      # Default 1 second delay before clicking
+            
+            logger.info(f"Moving smoothly to ({x}, {y}) over {move_duration}s")
+            
+            # Move to the coordinate smoothly
+            pyautogui.moveTo(x=x, y=y, duration=move_duration)
+            
+            # Wait for the specified delay
+            logger.info(f"Waiting {click_delay}s before clicking")
+            time.sleep(click_delay)
+            
+            # Perform the click at current position
+            logger.info(f"Clicking at ({x}, {y})")
+            pyautogui.click()
+            
             return jsonify({"status": "success"})
             
         elif action_type == 'key':
