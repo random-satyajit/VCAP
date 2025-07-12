@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katana - Game Automator | Ver 1.0.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        .left-panel {
+            flex: 0 0 500px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: #4a90e2;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .panel-content {
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .settings-group {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .group-header {
+            background: #e9ecef;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .group-content {
+            padding: 12px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .form-row:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-weight: 500;
+            color: #495057;
+            min-width: 120px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-ready { background: #d1ecf1; color: #0c5460; }
+        .status-running { background: #d4edda; color: #155724; }
+        .status-stopped { background: #f8d7da; color: #721c24; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-completed { background: #d4edda; color: #155724; }
+
+        .connection-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+
+        .game-info {
+            font-size: 12px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .path-auto-loaded {
+            background-color: #f0fff0 !important;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .logs-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .logs-content {
+            flex: 1;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            padding: 12px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .log-entry {
+            margin-bottom: 2px;
+        }
+
+        .log-INFO { color: #d4d4d4; }
+        .log-DEBUG { color: #808080; }
+        .log-WARNING { color: #ffaa00; }
+        .log-ERROR { color: #ff6b6b; }
+        .log-CRITICAL { color: #ff0000; background: #ffff00; }
+
+        .footer {
+            margin-top: auto;
+            padding: 16px;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .footer-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .footer-email {
+            font-size: 12px;
+            color: #4a90e2;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .screenshot-section {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .left-panel {
+                flex: none;
+            }
+            
+            .right-panel {
+                flex: none;
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel - Settings -->
+        <div class="left-panel">
+            <div class="panel-header">Settings</div>
+            <div class="panel-content">
+                <!-- SUT Connection -->
+                <div class="settings-group">
+                    <div class="group-header">SUT Connection</div>
+                    <div class="group-content">
+                        <div class="form-row">
+                            <label>IP Address:</label>
+                            <input type="text" id="sut_ip" value="192.168.50.231">
+                            <label style="min-width: auto; margin-left: 16px;">Port:</label>
+                            <input type="number" id="sut_port" value="8080" style="width: 80px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vision System -->
+                <div class="settings-group">
+                    <div class="group-header">Vision System - LLM Models</div>
+                    <div class="group-content">
+                        <div class="form-row">
+                            <label>LM Studio URL:</label>
+                            <input type="text" id="lm_studio_url" value="http://127.0.0.1:1234">
+                        </div>
+                        <div class="form-row">
+                            <label>Select Model:</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="vision_gemma" name="vision_model" value="gemma" checked>
+                                    <label for="vision_gemma" style="min-width: auto;">Gemma</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="vision_qwen" name="vision_model" value="qwen">
+                                    <label for="vision_qwen" style="min-width: auto;">Qwen VL</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Omniparser -->
+                <div class="settings-group">
+                    <div class="group-header">Omniparser + Flowrunner</div>
+                    <div class="group-content">
+                        <div class="form-row">
+                            <div class="radio-item">
+                                <input type="radio" id="vision_omniparser" name="vision_model" value="omniparser">
+                                <label for="vision_omniparser" style="min-width: auto;">Use Omniparser</label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Omniparser URL:</label>
+                            <input type="text" id="omniparser_url" value="http://localhost:8000">
+                            <span id="omniparser_status" class="connection-status disconnected">Not Connected</span>
+                            <button type="button" onclick="testOmniparser()">Test</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Configuration -->
+                <div class="settings-group">
+                    <div class="group-header">Game Configuration</div>
+                    <div class="group-content">
+                        <div class="form-row">
+                            <label class="tooltip" data-tooltip="Path to game executable on the remote SUT system">Game Path (on SUT):</label>
+                            <div class="input-group">
+                                <input type="text" id="game_path" placeholder="Will be auto-populated from config">
+                                <span id="path_status" class="game-info"></span>
+                                <button type="button" onclick="clearGamePath()">Clear</button>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Config File:</label>
+                            <div class="input-group">
+                                <select id="config_path">
+                                    <option value="">Select a configuration file...</option>
+                                </select>
+                                <button type="button" onclick="loadConfigList()">Refresh</button>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Max Iterations:</label>
+                            <input type="number" id="max_iterations" value="50" style="width: 100px;">
+                        </div>
+                        <div class="form-row">
+                            <label>Game Info:</label>
+                            <span id="game_info" class="game-info">No valid config file selected</span>
+                        </div>
+                        <div class="form-row">
+                            <label>Config Type:</label>
+                            <span id="config_type" class="game-info">No config loaded</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="start_button" class="btn-success" onclick="startAutomation()">Start Automation</button>
+                    <button id="stop_button" class="btn-danger" onclick="stopAutomation()" disabled>Stop</button>
+                    <button class="btn-secondary" onclick="clearLogs()">Clear Logs</button>
+                    <button class="btn-secondary" onclick="openLogsFolder()">Open Logs</button>
+                </div>
+
+                <!-- Status -->
+                <div class="form-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #dee2e6;">
+                    <label>Status:</label>
+                    <span id="status_indicator" class="status-indicator status-ready">Ready</span>
+                </div>
+
+                <!-- Screenshot Section -->
+                <div class="screenshot-section">
+                    <p>Screenshots and annotated images will be saved to the logs folder</p>
+                    <button type="button" style="margin-top: 8px;" onclick="openLatestScreenshot()">Open Latest Screenshot</button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-info">Version 1.0</div>
+                <div class="footer-info">For feedback/suggestions and issues please email to</div>
+                <div class="footer-email" onclick="window.open('mailto:satyajit.bhuyan@intel.com')">satyajit.bhuyan@intel.com</div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Logs -->
+        <div class="right-panel">
+            <div class="panel-header">Logs</div>
+            <div class="logs-container">
+                <div id="logs_content" class="logs-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize WebSocket connection
+        const socket = io();
+        let pathAutoLoaded = false;
+
+        // Socket event handlers
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            addLogEntry('INFO', 'Connected to automation server');
+            
+            // Send initial ping to establish connection
+            socket.emit('ping', {timestamp: Date.now()});
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+            addLogEntry('WARNING', 'Disconnected from automation server - attempting to reconnect...');
+        });
+
+        socket.on('heartbeat', function(data) {
+            // Respond to server heartbeat to keep connection alive
+            socket.emit('pong', {timestamp: Date.now()});
+            console.log('Heartbeat received from server');
+        });
+
+        socket.on('connect_error', function(error) {
+            console.log('Connection error:', error);
+            addLogEntry('ERROR', 'Connection error: ' + error);
+        });
+
+        socket.on('reconnect', function() {
+            console.log('Reconnected to server');
+            addLogEntry('INFO', 'Reconnected to automation server');
+        });
+
+        socket.on('log_message', function(data) {
+            let message = `${data.timestamp} - ${data.message}`;
+            
+            // Add module info for debugging
+            if (data.module && data.module !== 'root') {
+                message += ` [${data.module}]`;
+            }
+            
+            // Add line number for debugging
+            if (data.line) {
+                message += ` (line ${data.line})`;
+            }
+            
+            addLogEntry(data.level, message);
+            
+            // If there's exception info, add it as separate entries
+            if (data.exception) {
+                data.exception.forEach(line => {
+                    addLogEntry('ERROR', `${data.timestamp} - ${line.trim()}`);
+                });
+            }
+        });
+
+        socket.on('status_update', function(data) {
+            updateStatus(data.status, data.running);
+        });
+
+        socket.on('clear_logs', function() {
+            document.getElementById('logs_content').innerHTML = '';
+        });
+
+        // Utility functions
+        function addLogEntry(level, message) {
+            const logsContent = document.getElementById('logs_content');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${level}`;
+            logEntry.textContent = message;
+            logsContent.appendChild(logEntry);
+            logsContent.scrollTop = logsContent.scrollHeight;
+        }
+
+        function updateStatus(status, running) {
+            const indicator = document.getElementById('status_indicator');
+            const startButton = document.getElementById('start_button');
+            const stopButton = document.getElementById('stop_button');
+
+            indicator.textContent = status;
+            indicator.className = `status-indicator status-${status.toLowerCase()}`;
+
+            startButton.disabled = running;
+            stopButton.disabled = !running;
+        }
+
+        function getSelectedVisionModel() {
+            const radios = document.querySelectorAll('input[name="vision_model"]');
+            for (const radio of radios) {
+                if (radio.checked) return radio.value;
+            }
+            return 'gemma';
+        }
+
+        function clearGamePath() {
+            document.getElementById('game_path').value = '';
+            document.getElementById('path_status').textContent = '';
+            document.getElementById('game_path').classList.remove('path-auto-loaded');
+            pathAutoLoaded = false;
+            addLogEntry('INFO', 'Game path cleared by user');
+        }
+
+        // API functions
+        async function testOmniparser() {
+            const url = document.getElementById('omniparser_url').value;
+            const statusElement = document.getElementById('omniparser_status');
+            
+            try {
+                statusElement.textContent = 'Testing...';
+                statusElement.className = 'connection-status';
+                
+                const response = await fetch('/api/omniparser/test', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url})
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    statusElement.textContent = 'Connected';
+                    statusElement.className = 'connection-status connected';
+                    addLogEntry('INFO', 'Successfully connected to Omniparser server');
+                } else {
+                    statusElement.textContent = 'Failed';
+                    statusElement.className = 'connection-status disconnected';
+                    addLogEntry('ERROR', `Omniparser connection failed: ${result.message}`);
+                }
+            } catch (error) {
+                statusElement.textContent = 'Failed';
+                statusElement.className = 'connection-status disconnected';
+                addLogEntry('ERROR', `Omniparser connection error: ${error.message}`);
+            }
+        }
+
+        async function loadConfigList() {
+            try {
+                const response = await fetch('/api/config/list');
+                const configs = await response.json();
+                
+                const select = document.getElementById('config_path');
+                select.innerHTML = '<option value="">Select a configuration file...</option>';
+                
+                configs.forEach(config => {
+                    const option = document.createElement('option');
+                    option.value = config;
+                    option.textContent = config;
+                    select.appendChild(option);
+                });
+                
+                // Set default if cs2_simple.yaml exists
+                const defaultConfig = configs.find(c => c.includes('cs2_simple.yaml'));
+                if (defaultConfig) {
+                    select.value = defaultConfig;
+                    loadConfigInfo();
+                }
+                
+                addLogEntry('INFO', `Loaded ${configs.length} configuration files`);
+            } catch (error) {
+                addLogEntry('ERROR', `Failed to load config list: ${error.message}`);
+            }
+        }
+
+        async function loadConfigInfo() {
+            const configPath = document.getElementById('config_path').value;
+            if (!configPath) {
+                document.getElementById('game_info').textContent = 'No valid config file selected';
+                document.getElementById('config_type').textContent = 'No config loaded';
+                if (pathAutoLoaded) clearGamePath();
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/config/load', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({path: configPath})
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+                
+                const gameInfo = await response.json();
+                
+                // Update game info display
+                document.getElementById('game_info').textContent = 
+                    `${gameInfo.game_name} - Resolution: ${gameInfo.resolution}, Preset: ${gameInfo.preset}, Benchmark: ~${gameInfo.benchmark_duration}s`;
+                
+                // Update config type
+                const configTypeElement = document.getElementById('config_type');
+                if (gameInfo.config_type === 'steps') {
+                    configTypeElement.textContent = 'Step-based (SimpleAutomation)';
+                    configTypeElement.style.color = '#28a745';
+                } else {
+                    configTypeElement.textContent = 'State machine (DecisionEngine)';
+                    configTypeElement.style.color = '#007bff';
+                }
+                
+                // Auto-populate game path if available
+                if (gameInfo.game_path) {
+                    document.getElementById('game_path').value = gameInfo.game_path;
+                    document.getElementById('path_status').textContent = '(auto-loaded from config)';
+                    document.getElementById('game_path').classList.add('path-auto-loaded');
+                    pathAutoLoaded = true;
+                    addLogEntry('INFO', `Auto-populated game path from config: ${gameInfo.game_path}`);
+                } else if (pathAutoLoaded) {
+                    clearGamePath();
+                }
+                
+                addLogEntry('INFO', `Loaded config for game: ${gameInfo.game_name} (type: ${gameInfo.config_type})`);
+                
+            } catch (error) {
+                document.getElementById('game_info').textContent = `Error loading config: ${error.message}`;
+                document.getElementById('config_type').textContent = 'Invalid config';
+                addLogEntry('ERROR', `Failed to load game config: ${error.message}`);
+                if (pathAutoLoaded) clearGamePath();
+            }
+        }
+
+        async function startAutomation() {
+            const settings = {
+                sut_ip: document.getElementById('sut_ip').value,
+                sut_port: document.getElementById('sut_port').value,
+                game_path: document.getElementById('game_path').value,
+                config_path: document.getElementById('config_path').value,
+                max_iterations: document.getElementById('max_iterations').value,
+                vision_model: getSelectedVisionModel(),
+                lm_studio_url: document.getElementById('lm_studio_url').value,
+                omniparser_url: document.getElementById('omniparser_url').value
+            };
+            
+            // Validate required fields
+            if (!settings.sut_ip || !settings.sut_port || !settings.config_path || !settings.max_iterations) {
+                addLogEntry('ERROR', 'Please fill in all required fields');
+                return;
+            }
+            
+            // Warn about missing game path
+            if (!settings.game_path) {
+                if (!confirm('No game path specified. The config file should contain the path.\n\nDo you want to continue anyway?')) {
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch('/api/automation/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(settings)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addLogEntry('INFO', result.message);
+                } else {
+                    addLogEntry('ERROR', result.error);
+                }
+            } catch (error) {
+                addLogEntry('ERROR', `Failed to start automation: ${error.message}`);
+            }
+        }
+
+        async function stopAutomation() {
+            try {
+                const response = await fetch('/api/automation/stop', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addLogEntry('INFO', result.message);
+                } else {
+                    addLogEntry('ERROR', result.error);
+                }
+            } catch (error) {
+                addLogEntry('ERROR', `Failed to stop automation: ${error.message}`);
+            }
+        }
+
+        async function clearLogs() {
+            try {
+                await fetch('/api/logs/clear', {method: 'POST'});
+            } catch (error) {
+                addLogEntry('ERROR', `Failed to clear logs: ${error.message}`);
+            }
+        }
+
+        function openLogsFolder() {
+            addLogEntry('INFO', 'Opening logs folder requires access to the server file system');
+            alert('Logs are saved on the server. Please check the logs directory on the server machine.');
+        }
+
+        function openLatestScreenshot() {
+            addLogEntry('INFO', 'Opening latest screenshot requires access to the server file system');
+            alert('Screenshots are saved on the server. Please check the logs directory on the server machine.');
+        }
+
+        // Event handlers
+        document.getElementById('config_path').addEventListener('change', loadConfigInfo);
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            loadConfigList();
+            addLogEntry('INFO', 'Katana Web Interface initialized');
+        });
+    </script>
+</body>
+</html>
