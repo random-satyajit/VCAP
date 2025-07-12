@@ -162,7 +162,7 @@ class AutomationGUI:
         
         # File handler
         os.makedirs("logs", exist_ok=True)
-        file_handler = logging.FileHandler(f"logs/gui_run_{time.strftime('%Y_%m_%d__%H_%M_%S')}.log")
+        file_handler = logging.FileHandler(f"logs/gui_run_{time.strftime('%Y_%m_%d__%H_%M_%S')}.log", encoding='utf-8')
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(file_formatter)
         self.logger.addHandler(file_handler)
