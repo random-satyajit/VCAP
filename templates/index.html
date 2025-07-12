@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katana - Game Automator | Ver 1.0.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,78 +13,178 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-blue: #00d4ff;
+            --secondary-blue: #0099cc;
+            --accent-cyan: #00ffff;
+            --dark-bg: #0a0a0a;
+            --card-bg: rgba(15, 15, 25, 0.95);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --border-glow: rgba(0, 212, 255, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --error: #ff4444;
+            --intel-blue: #0071c5;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, var(--primary-blue), transparent),
+                radial-gradient(2px 2px at 40px 70px, var(--accent-cyan), transparent),
+                radial-gradient(1px 1px at 90px 40px, var(--secondary-blue), transparent),
+                radial-gradient(1px 1px at 130px 80px, var(--primary-blue), transparent);
+            background-repeat: repeat;
+            background-size: 150px 100px;
+            animation: sparkle 20s linear infinite;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        @keyframes sparkle {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-100px); }
         }
 
         .container {
             display: flex;
             height: 100vh;
-            padding: 10px;
-            gap: 10px;
+            padding: 15px;
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-panel, .right-panel {
+            backdrop-filter: blur(20px);
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 
+                0 0 30px rgba(0, 212, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
         }
 
         .left-panel {
-            flex: 0 0 500px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex: 0 0 520px;
             display: flex;
             flex-direction: column;
         }
 
         .right-panel {
             flex: 1;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
         }
 
         .panel-header {
-            background: #4a90e2;
+            background: linear-gradient(135deg, var(--intel-blue) 0%, var(--primary-blue) 100%);
             color: white;
-            padding: 12px 16px;
-            border-radius: 8px 8px 0 0;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .panel-content {
-            padding: 16px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .settings-group {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            margin-bottom: 16px;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
             overflow: hidden;
         }
 
+        .panel-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: sweep 3s infinite;
+        }
+
+        @keyframes sweep {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .panel-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-blue) transparent;
+        }
+
+        .panel-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--primary-blue), var(--accent-cyan));
+            border-radius: 4px;
+        }
+
+        .settings-group {
+            background: var(--glass-bg);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .settings-group:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
         .group-header {
-            background: #e9ecef;
-            padding: 8px 12px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 153, 204, 0.2) 100%);
+            padding: 12px 16px;
+            font-family: 'Orbitron', monospace;
             font-weight: 600;
             font-size: 14px;
-            color: #495057;
-            border-bottom: 1px solid #dee2e6;
+            color: var(--accent-cyan);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .group-content {
-            padding: 12px;
+            padding: 16px;
         }
 
         .form-row {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
-            gap: 8px;
+            margin-bottom: 12px;
+            gap: 12px;
         }
 
         .form-row:last-child {
@@ -92,130 +193,217 @@
 
         label {
             font-weight: 500;
-            color: #495057;
-            min-width: 120px;
+            color: var(--text-primary);
+            min-width: 130px;
+            font-size: 14px;
         }
 
         input[type="text"], input[type="number"], select {
-            padding: 6px 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+            padding: 10px 14px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
             font-size: 14px;
             flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
         }
 
         input[type="text"]:focus, input[type="number"]:focus, select:focus {
             outline: none;
-            border-color: #4a90e2;
-            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            background: rgba(0, 0, 0, 0.6);
         }
 
         .input-group {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
             flex: 1;
         }
 
         .radio-group {
             display: flex;
-            gap: 16px;
+            gap: 20px;
             align-items: center;
         }
 
         .radio-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .radio-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .radio-item input[type="radio"] {
+            accent-color: var(--primary-blue);
         }
 
         button {
-            background: #4a90e2;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            transition: background-color 0.2s;
+            font-weight: 600;
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
         }
 
         button:hover {
-            background: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         button:disabled {
-            background: #6c757d;
+            background: linear-gradient(135deg, #666 0%, #444 100%);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-success {
-            background: #28a745;
+            background: linear-gradient(135deg, var(--success) 0%, #00cc66 100%);
         }
 
         .btn-success:hover {
-            background: #218838;
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
         }
 
         .btn-danger {
-            background: #dc3545;
+            background: linear-gradient(135deg, var(--error) 0%, #cc3333 100%);
         }
 
         .btn-danger:hover {
-            background: #c82333;
+            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
         }
 
         .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
+            background: linear-gradient(135deg, #666 0%, #555 100%);
         }
 
         .status-indicator {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Orbitron', monospace;
+            position: relative;
+            overflow: hidden;
         }
 
-        .status-ready { background: #d1ecf1; color: #0c5460; }
-        .status-running { background: #d4edda; color: #155724; }
-        .status-stopped { background: #f8d7da; color: #721c24; }
-        .status-error { background: #f8d7da; color: #721c24; }
-        .status-completed { background: #d4edda; color: #155724; }
+        .status-ready { 
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 153, 204, 0.2) 100%);
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+        }
+
+        .status-running { 
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 204, 102, 0.2) 100%);
+            color: var(--success);
+            border: 1px solid var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-stopped { 
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(204, 51, 51, 0.2) 100%);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .status-error { 
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(204, 51, 51, 0.2) 100%);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .status-completed { 
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 204, 102, 0.2) 100%);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
 
         .connection-status {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .connected { background: #d4edda; color: #155724; }
-        .disconnected { background: #f8d7da; color: #721c24; }
+        .connected { 
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .disconnected { 
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
 
         .game-info {
-            font-size: 12px;
-            color: #6c757d;
+            font-size: 13px;
+            color: var(--text-secondary);
             font-style: italic;
         }
 
         .path-auto-loaded {
-            background-color: #f0fff0 !important;
+            background: rgba(0, 255, 136, 0.1) !important;
+            border-color: var(--success) !important;
         }
 
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             flex-wrap: wrap;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #dee2e6;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 212, 255, 0.3);
         }
 
         .logs-container {
@@ -227,54 +415,115 @@
 
         .logs-content {
             flex: 1;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'Consolas', 'Monaco', monospace;
+            background: linear-gradient(135deg, #000000 0%, #0d1421 100%);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
             font-size: 13px;
-            padding: 12px;
+            padding: 20px;
             overflow-y: auto;
             white-space: pre-wrap;
-            border-radius: 0 0 8px 8px;
+            border-radius: 0 0 20px 20px;
+            position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-blue) transparent;
+        }
+
+        .logs-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .logs-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .logs-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--primary-blue), var(--accent-cyan));
+            border-radius: 4px;
         }
 
         .log-entry {
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            padding: 2px 0;
+            border-left: 3px solid transparent;
+            padding-left: 8px;
+            transition: all 0.3s ease;
         }
 
-        .log-INFO { color: #d4d4d4; }
-        .log-DEBUG { color: #808080; }
-        .log-WARNING { color: #ffaa00; }
-        .log-ERROR { color: #ff6b6b; }
-        .log-CRITICAL { color: #ff0000; background: #ffff00; }
+        .log-INFO { 
+            color: var(--text-primary);
+            border-left-color: var(--primary-blue);
+        }
+
+        .log-DEBUG { 
+            color: var(--text-secondary);
+            border-left-color: #666;
+        }
+
+        .log-WARNING { 
+            color: var(--warning);
+            border-left-color: var(--warning);
+            text-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
+        }
+
+        .log-ERROR { 
+            color: var(--error);
+            border-left-color: var(--error);
+            text-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
+        }
+
+        .log-CRITICAL { 
+            color: #000;
+            background: linear-gradient(135deg, var(--error) 0%, var(--warning) 100%);
+            border-left-color: var(--error);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
 
         .footer {
             margin-top: auto;
-            padding: 16px;
-            border-top: 1px solid #dee2e6;
-            background: #f8f9fa;
+            padding: 20px;
+            border-top: 1px solid rgba(0, 212, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
             text-align: center;
-            border-radius: 0 0 8px 8px;
+            border-radius: 0 0 20px 20px;
         }
 
         .footer-info {
             font-size: 12px;
-            color: #6c757d;
-            margin-bottom: 4px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-family: 'Orbitron', monospace;
         }
 
         .footer-email {
             font-size: 12px;
-            color: #4a90e2;
-            text-decoration: underline;
+            color: var(--primary-blue);
+            text-decoration: none;
             cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .footer-email:hover {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
         .screenshot-section {
-            margin-top: 16px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
             text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-section:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--primary-blue);
         }
 
         .tooltip {
@@ -288,16 +537,18 @@
             bottom: 125%;
             left: 50%;
             transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 5px 8px;
-            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.9);
+            color: var(--primary-blue);
+            padding: 8px 12px;
+            border-radius: 8px;
             font-size: 12px;
             white-space: nowrap;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
             z-index: 1000;
+            border: 1px solid var(--primary-blue);
+            backdrop-filter: blur(10px);
         }
 
         .tooltip:hover::after {
@@ -309,6 +560,17 @@
             pointer-events: none;
         }
 
+        /* Gaming-style glow effects */
+        .panel-header, .settings-group:hover, button:hover {
+            animation: subtleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes subtleGlow {
+            from { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
+            to { box-shadow: 0 0 30px rgba(0, 212, 255, 0.4); }
+        }
+
+        /* Responsive design */
         @media (max-width: 1200px) {
             .container {
                 flex-direction: column;
@@ -318,6 +580,7 @@
             
             .left-panel {
                 flex: none;
+                margin-bottom: 15px;
             }
             
             .right-panel {
@@ -325,17 +588,28 @@
                 min-height: 400px;
             }
         }
+
+        /* Intel branding subtle touches */
+        .panel-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 113, 197, 0.3));
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Left Panel - Settings -->
         <div class="left-panel">
-            <div class="panel-header">Settings</div>
+            <div class="panel-header">⚡ KATANA CONTROL CENTER ⚡</div>
             <div class="panel-content">
                 <!-- SUT Connection -->
                 <div class="settings-group">
-                    <div class="group-header">SUT Connection</div>
+                    <div class="group-header">🔗 SUT Connection</div>
                     <div class="group-content">
                         <div class="form-row">
                             <label>IP Address:</label>
@@ -348,7 +622,7 @@
 
                 <!-- Vision System -->
                 <div class="settings-group">
-                    <div class="group-header">Vision System - LLM Models</div>
+                    <div class="group-header">🧠 Vision System - LLM Models</div>
                     <div class="group-content">
                         <div class="form-row">
                             <label>LM Studio URL:</label>
@@ -372,7 +646,7 @@
 
                 <!-- Omniparser -->
                 <div class="settings-group">
-                    <div class="group-header">Omniparser + Flowrunner</div>
+                    <div class="group-header">🎯 Omniparser + Flowrunner</div>
                     <div class="group-content">
                         <div class="form-row">
                             <div class="radio-item">
@@ -391,7 +665,7 @@
 
                 <!-- Game Configuration -->
                 <div class="settings-group">
-                    <div class="group-header">Game Configuration</div>
+                    <div class="group-header">🎮 Game Configuration</div>
                     <div class="group-content">
                         <div class="form-row">
                             <label class="tooltip" data-tooltip="Path to game executable on the remote SUT system">Game Path (on SUT):</label>
@@ -427,28 +701,28 @@
 
                 <!-- Action Buttons -->
                 <div class="action-buttons">
-                    <button id="start_button" class="btn-success" onclick="startAutomation()">Start Automation</button>
-                    <button id="stop_button" class="btn-danger" onclick="stopAutomation()" disabled>Stop</button>
-                    <button class="btn-secondary" onclick="clearLogs()">Clear Logs</button>
-                    <button class="btn-secondary" onclick="openLogsFolder()">Open Logs</button>
+                    <button id="start_button" class="btn-success" onclick="startAutomation()">🚀 Start Automation</button>
+                    <button id="stop_button" class="btn-danger" onclick="stopAutomation()" disabled>⏹️ Stop</button>
+                    <button class="btn-secondary" onclick="clearLogs()">🗑️ Clear Logs</button>
+                    <button class="btn-secondary" onclick="openLogsFolder()">📁 Open Logs</button>
                 </div>
 
                 <!-- Status -->
-                <div class="form-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #dee2e6;">
+                <div class="form-row" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0, 212, 255, 0.3);">
                     <label>Status:</label>
                     <span id="status_indicator" class="status-indicator status-ready">Ready</span>
                 </div>
 
                 <!-- Screenshot Section -->
                 <div class="screenshot-section">
-                    <p>Screenshots and annotated images will be saved to the logs folder</p>
-                    <button type="button" style="margin-top: 8px;" onclick="openLatestScreenshot()">Open Latest Screenshot</button>
+                    <p>📸 Screenshots and annotated images will be saved to the logs folder</p>
+                    <button type="button" style="margin-top: 12px;" onclick="openLatestScreenshot()">🖼️ Open Latest Screenshot</button>
                 </div>
             </div>
 
             <!-- Footer -->
             <div class="footer">
-                <div class="footer-info">Version 1.0</div>
+                <div class="footer-info">⚡ KATANA v1.0 ⚡</div>
                 <div class="footer-info">For feedback/suggestions and issues please email to</div>
                 <div class="footer-email" onclick="window.open('mailto:satyajit.bhuyan@intel.com')">satyajit.bhuyan@intel.com</div>
             </div>
@@ -456,7 +730,7 @@
 
         <!-- Right Panel - Logs -->
         <div class="right-panel">
-            <div class="panel-header">Logs</div>
+            <div class="panel-header">📊 EXECUTION LOGS</div>
             <div class="logs-container">
                 <div id="logs_content" class="logs-content"></div>
             </div>
@@ -659,10 +933,10 @@
                 const configTypeElement = document.getElementById('config_type');
                 if (gameInfo.config_type === 'steps') {
                     configTypeElement.textContent = 'Step-based (SimpleAutomation)';
-                    configTypeElement.style.color = '#28a745';
+                    configTypeElement.style.color = '#00ff88';
                 } else {
                     configTypeElement.textContent = 'State machine (DecisionEngine)';
-                    configTypeElement.style.color = '#007bff';
+                    configTypeElement.style.color = '#00d4ff';
                 }
                 
                 // Auto-populate game path if available
@@ -772,7 +1046,7 @@
         // Initialize on page load
         window.addEventListener('load', function() {
             loadConfigList();
-            addLogEntry('INFO', 'Katana Web Interface initialized');
+            addLogEntry('INFO', '⚡ Katana Web Interface initialized - Ready for gaming automation! ⚡');
         });
     </script>
 </body>
