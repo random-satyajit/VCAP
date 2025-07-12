@@ -14,76 +14,68 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #f0f0f0;
             color: #333;
-        }
-
-        .container {
-            display: flex;
             height: 100vh;
-            padding: 10px;
-            gap: 10px;
-        }
-
-        .left-panel {
-            flex: 0 0 500px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .right-panel {
-            flex: 1;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-header {
-            background: #4a90e2;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px 8px 0 0;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .panel-content {
-            padding: 16px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .settings-group {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            margin-bottom: 16px;
             overflow: hidden;
         }
 
+        .main-container {
+            display: flex;
+            height: 100vh;
+            padding: 10px;
+            gap: 5px;
+        }
+
+        .left-pane {
+            flex: 0 0 500px;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .right-pane {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-frame {
+            padding: 10px;
+            flex: 1;
+        }
+
+        .settings-group {
+            border: 2px solid #c0c0c0;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: #f8f8f8;
+        }
+
         .group-header {
-            background: #e9ecef;
+            background: #e1e1e1;
             padding: 8px 12px;
             font-weight: 600;
-            font-size: 14px;
-            color: #495057;
-            border-bottom: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #333;
+            border-bottom: 1px solid #c0c0c0;
         }
 
         .group-content {
-            padding: 12px;
+            padding: 10px;
         }
 
         .form-row {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
-            gap: 8px;
+            gap: 5px;
         }
 
         .form-row:last-child {
@@ -92,189 +84,280 @@
 
         label {
             font-weight: 500;
-            color: #495057;
-            min-width: 120px;
+            color: #333;
+            font-size: 11px;
+            min-width: 100px;
         }
 
         input[type="text"], input[type="number"], select {
-            padding: 6px 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 14px;
-            flex: 1;
+            padding: 3px 6px;
+            border: 1px solid #a0a0a0;
+            border-radius: 2px;
+            font-size: 11px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         input[type="text"]:focus, input[type="number"]:focus, select:focus {
             outline: none;
-            border-color: #4a90e2;
-            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+            border-color: #0078d4;
+            box-shadow: 0 0 0 1px #0078d4;
         }
 
         .input-group {
             display: flex;
-            gap: 8px;
+            gap: 5px;
             align-items: center;
             flex: 1;
         }
 
         .radio-group {
             display: flex;
-            gap: 16px;
+            gap: 15px;
             align-items: center;
         }
 
         .radio-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
+        }
+
+        input[type="radio"] {
+            margin: 0;
         }
 
         button {
-            background: #4a90e2;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            background: #e1e1e1;
+            color: #333;
+            border: 1px solid #a0a0a0;
+            padding: 4px 12px;
+            border-radius: 2px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background-color 0.2s;
+            font-size: 11px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 23px;
         }
 
         button:hover {
-            background: #357abd;
+            background: #d8d8d8;
+        }
+
+        button:active {
+            background: #c0c0c0;
         }
 
         button:disabled {
-            background: #6c757d;
+            background: #f0f0f0;
+            color: #888;
             cursor: not-allowed;
         }
 
-        .btn-success {
+        .btn-start {
             background: #28a745;
+            color: white;
+            border-color: #28a745;
         }
 
-        .btn-success:hover {
+        .btn-start:hover {
             background: #218838;
         }
 
-        .btn-danger {
+        .btn-stop {
             background: #dc3545;
+            color: white;
+            border-color: #dc3545;
         }
 
-        .btn-danger:hover {
+        .btn-stop:hover {
             background: #c82333;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-ready { background: #d1ecf1; color: #0c5460; }
-        .status-running { background: #d4edda; color: #155724; }
-        .status-stopped { background: #f8d7da; color: #721c24; }
-        .status-error { background: #f8d7da; color: #721c24; }
-        .status-completed { background: #d4edda; color: #155724; }
-
         .connection-status {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 2px 4px;
+            border-radius: 2px;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
         }
 
-        .connected { background: #d4edda; color: #155724; }
-        .disconnected { background: #f8d7da; color: #721c24; }
+        .status-connected { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-disconnected { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
 
         .game-info {
-            font-size: 12px;
-            color: #6c757d;
-            font-style: italic;
+            font-size: 10px;
+            color: #0066cc;
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .config-type {
+            font-size: 10px;
+            color: #666;
+            font-style: normal;
         }
 
         .path-auto-loaded {
             background-color: #f0fff0 !important;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #dee2e6;
+        .path-status {
+            font-size: 9px;
+            color: #28a745;
+            font-style: italic;
         }
 
-        .logs-container {
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #d0d0d0;
+        }
+
+        .status-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #d0d0d0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .status-ready { 
+            background: #cce5ff; 
+            color: #0066cc;
+            border: 1px solid #99ccff;
+        }
+        .status-running { 
+            background: #d4edda; 
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-stopped { 
+            background: #f8d7da; 
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-error { 
+            background: #f8d7da; 
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-completed { 
+            background: #d4edda; 
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .screenshot-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .screenshot-section p {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding: 10px;
+            border-top: 1px solid #d0d0d0;
+            background: #f8f8f8;
+            text-align: center;
+        }
+
+        .footer-separator {
+            border-top: 1px solid #d0d0d0;
+            margin: 5px 0;
+        }
+
+        .footer-version {
+            font-size: 10px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 3px;
+        }
+
+        .footer-feedback {
+            font-size: 9px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .footer-email {
+            font-size: 9px;
+            color: #0066cc;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .log-frame {
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0;
+            margin: 5px;
         }
 
-        .logs-content {
+        .log-header {
+            background: #e1e1e1;
+            padding: 6px 10px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #333;
+            border-bottom: 1px solid #c0c0c0;
+        }
+
+        .log-area {
             flex: 1;
             background: #1e1e1e;
             color: #d4d4d4;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            padding: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 11px;
+            padding: 5px;
             overflow-y: auto;
             white-space: pre-wrap;
-            border-radius: 0 0 8px 8px;
+            word-wrap: break-word;
+            line-height: 1.2;
         }
 
         .log-entry {
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .log-INFO { color: #d4d4d4; }
         .log-DEBUG { color: #808080; }
         .log-WARNING { color: #ffaa00; }
         .log-ERROR { color: #ff6b6b; }
-        .log-CRITICAL { color: #ff0000; background: #ffff00; }
-
-        .footer {
-            margin-top: auto;
-            padding: 16px;
-            border-top: 1px solid #dee2e6;
-            background: #f8f9fa;
-            text-align: center;
-            border-radius: 0 0 8px 8px;
-        }
-
-        .footer-info {
-            font-size: 12px;
-            color: #6c757d;
-            margin-bottom: 4px;
-        }
-
-        .footer-email {
-            font-size: 12px;
-            color: #4a90e2;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .screenshot-section {
-            margin-top: 16px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            text-align: center;
+        .log-CRITICAL { 
+            color: #ff0000; 
+            background: #ffff00; 
+            font-weight: bold;
         }
 
         .tooltip {
@@ -290,63 +373,124 @@
             transform: translateX(-50%);
             background: #333;
             color: white;
-            padding: 5px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
             white-space: nowrap;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
             z-index: 1000;
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
         }
 
         .tooltip:hover::after {
             opacity: 1;
         }
 
+        /* Specific input widths to match GUI */
+        #sut_ip {
+            width: 120px;
+        }
+
+        #sut_port {
+            width: 60px;
+        }
+
+        #max_iterations {
+            width: 80px;
+        }
+
+        #lm_studio_url {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        #omniparser_url {
+            width: 180px;
+        }
+
+        #game_path {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        #config_path {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* Make sure radio buttons look like GUI */
+        input[type="radio"] {
+            width: 13px;
+            height: 13px;
+        }
+
+        /* Loading state */
         .loading {
             opacity: 0.6;
             pointer-events: none;
         }
 
+        /* Responsive adjustments */
         @media (max-width: 1200px) {
-            .container {
+            .main-container {
                 flex-direction: column;
                 height: auto;
                 min-height: 100vh;
             }
             
-            .left-panel {
+            .left-pane {
                 flex: none;
+                height: auto;
             }
             
-            .right-panel {
+            .right-pane {
                 flex: none;
                 min-height: 400px;
             }
         }
+
+        /* Scrollbar styling for webkit browsers */
+        .log-area::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .log-area::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .log-area::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 6px;
+        }
+
+        .log-area::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Left Panel - Settings -->
-        <div class="left-panel">
-            <div class="panel-header">Settings</div>
-            <div class="panel-content">
-                <!-- SUT Connection -->
+    <div class="main-container">
+        <!-- Left Pane - Settings (matches GUI layout exactly) -->
+        <div class="left-pane">
+            <div class="settings-frame">
+                <!-- SUT Connection Group -->
                 <div class="settings-group">
                     <div class="group-header">SUT Connection</div>
                     <div class="group-content">
                         <div class="form-row">
                             <label>IP Address:</label>
                             <input type="text" id="sut_ip" value="192.168.50.231">
-                            <label style="min-width: auto; margin-left: 16px;">Port:</label>
-                            <input type="number" id="sut_port" value="8080" style="width: 80px;">
+                            <label style="min-width: 30px; margin-left: 15px;">Port:</label>
+                            <input type="number" id="sut_port" value="8080">
                         </div>
                     </div>
                 </div>
 
-                <!-- Vision System -->
+                <!-- Vision System - LLM Models Group -->
                 <div class="settings-group">
                     <div class="group-header">Vision System - LLM Models</div>
                     <div class="group-content">
@@ -370,7 +514,7 @@
                     </div>
                 </div>
 
-                <!-- Omniparser -->
+                <!-- Omniparser + Flowrunner Group -->
                 <div class="settings-group">
                     <div class="group-header">Omniparser + Flowrunner</div>
                     <div class="group-content">
@@ -383,82 +527,85 @@
                         <div class="form-row">
                             <label>Omniparser URL:</label>
                             <input type="text" id="omniparser_url" value="http://localhost:8000">
-                            <span id="omniparser_status" class="connection-status disconnected">Not Connected</span>
-                            <button type="button" onclick="testOmniparser()">Test</button>
+                            <span id="omniparser_status" class="connection-status status-disconnected">Not Connected</span>
+                            <button type="button" onclick="testOmniparser()">Test Connection</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Game Configuration -->
-                <div class="settings-group">
-                    <div class="group-header">Game Configuration</div>
-                    <div class="group-content">
-                        <div class="form-row">
-                            <label class="tooltip" data-tooltip="Path to game executable on the remote SUT system">Game Path (on SUT):</label>
-                            <div class="input-group">
-                                <input type="text" id="game_path" placeholder="Will be auto-populated from config">
-                                <span id="path_status" class="game-info"></span>
-                                <button type="button" onclick="clearGamePath()">Clear</button>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <label>Config File:</label>
-                            <div class="input-group">
-                                <select id="config_path">
-                                    <option value="">Select a configuration file...</option>
-                                </select>
-                                <button type="button" onclick="loadConfigList()">Refresh</button>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <label>Max Iterations:</label>
-                            <input type="number" id="max_iterations" value="50" style="width: 100px;">
-                        </div>
-                        <div class="form-row">
-                            <label>Game Info:</label>
-                            <span id="game_info" class="game-info">No valid config file selected</span>
-                        </div>
-                        <div class="form-row">
-                            <label>Config Type:</label>
-                            <span id="config_type" class="game-info">No config loaded</span>
-                        </div>
+                <!-- Game Configuration (matches GUI exactly) -->
+                <div class="form-row">
+                    <label class="tooltip" data-tooltip="This is the path to the game executable on the remote SUT system. It will be auto-populated from the config file if available.">Game Path (on SUT):</label>
+                    <div class="input-group">
+                        <input type="text" id="game_path" placeholder="">
+                        <span id="path_status" class="path-status"></span>
+                        <button type="button" onclick="clearGamePath()">Clear</button>
+                        <button type="button" onclick="verifyGamePath()">Verify</button>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
+                <div class="form-row">
+                    <label>Config File:</label>
+                    <div class="input-group">
+                        <select id="config_path">
+                            <option value="">Select a configuration file...</option>
+                        </select>
+                        <button type="button" onclick="browseConfig()">Browse...</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Max Iterations:</label>
+                    <input type="number" id="max_iterations" value="50">
+                </div>
+
+                <div class="form-row">
+                    <label>Game Info:</label>
+                    <span id="game_info" class="game-info">No valid config file selected</span>
+                </div>
+
+                <div class="form-row">
+                    <label>Config Type:</label>
+                    <span id="config_type" class="config-type">No config loaded</span>
+                </div>
+
+                <!-- Action Buttons (matches GUI layout) -->
                 <div class="action-buttons">
-                    <button id="start_button" class="btn-success" onclick="startAutomation()">Start Automation</button>
-                    <button id="stop_button" class="btn-danger" onclick="stopAutomation()" disabled>Stop</button>
-                    <button class="btn-secondary" onclick="clearLogs()">Clear Logs</button>
-                    <button class="btn-secondary" onclick="openLogsFolder()">Open Logs</button>
+                    <button id="start_button" class="btn-start" onclick="startAutomation()">Start Automation</button>
+                    <button id="stop_button" class="btn-stop" onclick="stopAutomation()" disabled>Stop</button>
+                    <button onclick="clearLogs()">Clear Logs</button>
+                    <button onclick="openLogsFolder()">Open Logs Folder</button>
                 </div>
 
-                <!-- Status -->
-                <div class="form-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #dee2e6;">
-                    <label>Status:</label>
-                    <span id="status_indicator" class="status-indicator status-ready">Ready</span>
+                <!-- Status Section -->
+                <div class="status-section">
+                    <div class="form-row">
+                        <label>Status:</label>
+                        <span id="status_indicator" class="status-indicator status-ready">Ready</span>
+                    </div>
                 </div>
 
                 <!-- Screenshot Section -->
                 <div class="screenshot-section">
                     <p>Screenshots and annotated images will be saved to the logs folder</p>
-                    <button type="button" style="margin-top: 8px;" onclick="openLatestScreenshot()">Open Latest Screenshot</button>
+                    <button onclick="openLatestScreenshot()">Open Latest Screenshot</button>
                 </div>
             </div>
 
-            <!-- Footer -->
+            <!-- Footer (matches GUI exactly) -->
             <div class="footer">
-                <div class="footer-info">Version 1.0</div>
-                <div class="footer-info">For feedback/suggestions and issues please email to</div>
-                <div class="footer-email" onclick="window.open('mailto:satyajit.bhuyan@intel.com')">satyajit.bhuyan@intel.com</div>
+                <div class="footer-separator"></div>
+                <div class="footer-version">Version 1.0</div>
+                <div class="footer-feedback">For feedbacks/suggestions and issues please email to</div>
+                <div class="footer-email" onclick="openEmailClient()">satyajit.bhuyan@intel.com</div>
             </div>
         </div>
 
-        <!-- Right Panel - Logs -->
-        <div class="right-panel">
-            <div class="panel-header">Logs</div>
-            <div class="logs-container">
-                <div id="logs_content" class="logs-content"></div>
+        <!-- Right Pane - Logs (matches GUI exactly) -->
+        <div class="right-pane">
+            <div class="log-frame">
+                <div class="log-header">Logs</div>
+                <div id="log_area" class="log-area"></div>
             </div>
         </div>
     </div>
@@ -468,52 +615,29 @@
         const socket = io();
         let pathAutoLoaded = false;
 
-        // Socket event handlers
+        // Socket event handlers (match GUI app exactly)
         socket.on('connect', function() {
             console.log('Connected to server');
-            addLogEntry('INFO', 'Connected to automation server');
-            
-            // Send initial ping to establish connection
-            socket.emit('ping', {timestamp: Date.now()});
+            addLogEntry('INFO', 'Web client connected');
         });
 
         socket.on('disconnect', function() {
             console.log('Disconnected from server');
-            addLogEntry('WARNING', 'Disconnected from automation server - attempting to reconnect...');
-        });
-
-        socket.on('heartbeat', function(data) {
-            // Respond to server heartbeat to keep connection alive
-            socket.emit('pong', {timestamp: Date.now()});
-            console.log('Heartbeat received from server');
-        });
-
-        socket.on('connect_error', function(error) {
-            console.log('Connection error:', error);
-            addLogEntry('ERROR', 'Connection error: ' + error);
-        });
-
-        socket.on('reconnect', function() {
-            console.log('Reconnected to server');
-            addLogEntry('INFO', 'Reconnected to automation server');
+            addLogEntry('WARNING', 'Web client disconnected');
         });
 
         socket.on('log_message', function(data) {
+            // Format log message exactly like GUI
             let message = `${data.timestamp} - ${data.message}`;
             
-            // Add module info for debugging
+            // Add module info if available
             if (data.module && data.module !== 'root') {
                 message += ` [${data.module}]`;
             }
             
-            // Add line number for debugging
-            if (data.line) {
-                message += ` (line ${data.line})`;
-            }
-            
             addLogEntry(data.level, message);
             
-            // If there's exception info, add it as separate entries
+            // Handle exception info
             if (data.exception) {
                 data.exception.forEach(line => {
                     addLogEntry('ERROR', `${data.timestamp} - ${line.trim()}`);
@@ -526,17 +650,17 @@
         });
 
         socket.on('clear_logs', function() {
-            document.getElementById('logs_content').innerHTML = '';
+            document.getElementById('log_area').innerHTML = '';
         });
 
-        // Utility functions
+        // Utility functions (match GUI app functionality)
         function addLogEntry(level, message) {
-            const logsContent = document.getElementById('logs_content');
+            const logArea = document.getElementById('log_area');
             const logEntry = document.createElement('div');
             logEntry.className = `log-entry log-${level}`;
             logEntry.textContent = message;
-            logsContent.appendChild(logEntry);
-            logsContent.scrollTop = logsContent.scrollHeight;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
         }
 
         function updateStatus(status, running) {
@@ -567,7 +691,30 @@
             addLogEntry('INFO', 'Game path cleared by user');
         }
 
-        // API functions
+        function verifyGamePath() {
+            const gamePath = document.getElementById('game_path').value;
+            const sutIp = document.getElementById('sut_ip').value;
+            const sutPort = document.getElementById('sut_port').value;
+            
+            if (!gamePath) {
+                alert('Please enter or load a game path first');
+                return;
+            }
+            
+            if (!sutIp || !sutPort) {
+                alert('Please enter SUT IP and port first');
+                return;
+            }
+            
+            addLogEntry('INFO', `Verification requested for path: ${gamePath}`);
+            alert('Path verification requires the SUT service to be running.\nThis feature would check if the path exists on the remote system.');
+        }
+
+        function openEmailClient() {
+            window.open('mailto:satyajit.bhuyan@intel.com');
+        }
+
+        // API functions (match GUI app exactly)
         async function testOmniparser() {
             const url = document.getElementById('omniparser_url').value;
             const statusElement = document.getElementById('omniparser_status');
@@ -586,16 +733,16 @@
                 
                 if (result.status === 'success') {
                     statusElement.textContent = 'Connected';
-                    statusElement.className = 'connection-status connected';
-                    addLogEntry('INFO', 'Successfully connected to Omniparser server');
+                    statusElement.className = 'connection-status status-connected';
+                    addLogEntry('INFO', result.message);
                 } else {
-                    statusElement.textContent = 'Failed';
-                    statusElement.className = 'connection-status disconnected';
+                    statusElement.textContent = 'Connection Failed';
+                    statusElement.className = 'connection-status status-disconnected';
                     addLogEntry('ERROR', `Omniparser connection failed: ${result.message}`);
                 }
             } catch (error) {
-                statusElement.textContent = 'Failed';
-                statusElement.className = 'connection-status disconnected';
+                statusElement.textContent = 'Connection Failed';
+                statusElement.className = 'connection-status status-disconnected';
                 addLogEntry('ERROR', `Omniparser connection error: ${error.message}`);
             }
         }
@@ -619,7 +766,7 @@
                 const defaultConfig = configs.find(c => c.includes('cs2_simple.yaml'));
                 if (defaultConfig) {
                     select.value = defaultConfig;
-                    loadConfigInfo();
+                    loadGameInfo();
                 }
                 
                 addLogEntry('INFO', `Loaded ${configs.length} configuration files`);
@@ -628,11 +775,12 @@
             }
         }
 
-        async function loadConfigInfo() {
+        async function loadGameInfo() {
             const configPath = document.getElementById('config_path').value;
             if (!configPath) {
                 document.getElementById('game_info').textContent = 'No valid config file selected';
                 document.getElementById('config_type').textContent = 'No config loaded';
+                document.getElementById('config_type').style.color = '#666';
                 if (pathAutoLoaded) clearGamePath();
                 return;
             }
@@ -651,11 +799,11 @@
                 
                 const gameInfo = await response.json();
                 
-                // Update game info display
+                // Update game info display (exactly like GUI)
                 document.getElementById('game_info').textContent = 
                     `${gameInfo.game_name} - Resolution: ${gameInfo.resolution}, Preset: ${gameInfo.preset}, Benchmark: ~${gameInfo.benchmark_duration}s`;
                 
-                // Update config type
+                // Update config type (exactly like GUI)
                 const configTypeElement = document.getElementById('config_type');
                 if (gameInfo.config_type === 'steps') {
                     configTypeElement.textContent = 'Step-based (SimpleAutomation)';
@@ -665,7 +813,7 @@
                     configTypeElement.style.color = '#007bff';
                 }
                 
-                // Auto-populate game path if available
+                // Auto-populate game path (exactly like GUI)
                 if (gameInfo.game_path) {
                     document.getElementById('game_path').value = gameInfo.game_path;
                     document.getElementById('path_status').textContent = '(auto-loaded from config)';
@@ -681,12 +829,19 @@
             } catch (error) {
                 document.getElementById('game_info').textContent = `Error loading config: ${error.message}`;
                 document.getElementById('config_type').textContent = 'Invalid config';
+                document.getElementById('config_type').style.color = 'red';
                 addLogEntry('ERROR', `Failed to load game config: ${error.message}`);
                 if (pathAutoLoaded) clearGamePath();
             }
         }
 
+        function browseConfig() {
+            // In web version, this loads the list - GUI has file dialog
+            loadConfigList();
+        }
+
         async function startAutomation() {
+            // Validation exactly like GUI app
             const settings = {
                 sut_ip: document.getElementById('sut_ip').value,
                 sut_port: document.getElementById('sut_port').value,
@@ -698,17 +853,32 @@
                 omniparser_url: document.getElementById('omniparser_url').value
             };
             
-            // Validate required fields
-            if (!settings.sut_ip || !settings.sut_port || !settings.config_path || !settings.max_iterations) {
-                addLogEntry('ERROR', 'Please fill in all required fields');
+            // Validate inputs (exactly like GUI)
+            try {
+                const port = parseInt(settings.sut_port);
+                const iterations = parseInt(settings.max_iterations);
+                if (port <= 0 || iterations <= 0) {
+                    throw new Error("Port and max iterations must be positive integers");
+                }
+            } catch (e) {
+                addLogEntry('ERROR', e.message);
                 return;
             }
             
-            // Warn about missing game path
+            if (!settings.sut_ip) {
+                addLogEntry('ERROR', 'SUT IP address is required');
+                return;
+            }
+            
             if (!settings.game_path) {
                 if (!confirm('No game path specified. The config file should contain the path.\n\nDo you want to continue anyway?')) {
                     return;
                 }
+            }
+            
+            if (!settings.config_path) {
+                addLogEntry('ERROR', 'Config file is required');
+                return;
             }
             
             try {
@@ -748,28 +918,22 @@
             }
         }
 
-        async function clearLogs() {
-            try {
-                await fetch('/api/logs/clear', {method: 'POST'});
-            } catch (error) {
-                addLogEntry('ERROR', `Failed to clear logs: ${error.message}`);
-            }
+        function clearLogs() {
+            fetch('/api/logs/clear', {method: 'POST'});
         }
 
         function openLogsFolder() {
-            addLogEntry('INFO', 'Opening logs folder requires access to the server file system');
-            alert('Logs are saved on the server. Please check the logs directory on the server machine.');
+            addLogEntry('INFO', 'Logs are saved on the server. Please check the logs directory on the server machine.');
         }
 
         function openLatestScreenshot() {
-            addLogEntry('INFO', 'Opening latest screenshot requires access to the server file system');
-            alert('Screenshots are saved on the server. Please check the logs directory on the server machine.');
+            addLogEntry('INFO', 'Screenshots are saved on the server. Please check the logs directory on the server machine.');
         }
 
-        // Event handlers
-        document.getElementById('config_path').addEventListener('change', loadConfigInfo);
+        // Event handlers (match GUI app)
+        document.getElementById('config_path').addEventListener('change', loadGameInfo);
 
-        // Initialize on page load
+        // Initialize on page load (match GUI app)
         window.addEventListener('load', function() {
             loadConfigList();
             addLogEntry('INFO', 'Katana Web Interface initialized');
