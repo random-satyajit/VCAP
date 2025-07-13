@@ -140,12 +140,7 @@ class SimpleAutomation:
         return current_step > len(steps)
     
     def _process_step_modular(self, step: Dict[str, Any], bounding_boxes: List[BoundingBox], step_num: int) -> bool:
-        """Process a step using the new modular action system."""
-        
-        # Step can have multiple components:
-        # 1. find - locate an element (optional)
-        # 2. action - what to do
-        # 3. verify - check success (optional)
+        """Process a step using the new modular action system with enhanced logging."""
         
         target_element = None
         
@@ -154,9 +149,17 @@ class SimpleAutomation:
             target_element = self._find_matching_element(step["find"], bounding_boxes)
             if not target_element:
                 target_text = step["find"].get('text', 'Unknown')
-                logger.warning(f"Target element '{target_text}' not found")
+                target_type = step["find"].get('type', 'Unknown')
+                logger.warning(f"Target element not found: {target_type} with text '{target_text}'")
                 self._log_available_elements(bounding_boxes)
                 return False
+            else:
+                # Log successful element detection
+                element_text = target_element.element_text if target_element.element_text else "(no text)"
+                logger.info("=========================================================")
+                logger.info(f"Found target element: {target_element.element_type} '{element_text}' at ({target_element.x}, {target_element.y})")
+                logger.info("=========================================================")
+
         
         # 2. EXECUTE ACTION
         if "action" in step:
@@ -241,16 +244,19 @@ class SimpleAutomation:
             return False
     
     def _handle_click_action(self, action_config: Dict[str, Any], target_element: Optional[BoundingBox]) -> bool:
-        """Handle various click actions."""
+        """Handle various click actions with enhanced logging."""
         button = action_config.get("button", "left").lower()
         
-        # Get coordinates
+        # Get element information for logging
+        element_info = "unknown element"
         if target_element:
+            element_info = f"'{target_element.element_text}'" if target_element.element_text else f"{target_element.element_type} element"
             x = target_element.x + (target_element.width // 2)
             y = target_element.y + (target_element.height // 2)
         else:
             x = action_config.get("x", 0)
             y = action_config.get("y", 0)
+            element_info = "coordinates"
         
         # Apply offset if specified
         offset_x = action_config.get("offset_x", 0)
@@ -273,10 +279,13 @@ class SimpleAutomation:
         
         try:
             response = self.network.send_action(action)
-            logger.info(f"{button.capitalize()}-clicked at ({x}, {y})")
+            # Enhanced logging with element information
+            logger.info(f"Clicked on {element_info} at ({x}, {y})")
+            if target_element and target_element.element_text:
+                logger.debug(f"Element details: type='{target_element.element_type}', text='{target_element.element_text}', size={target_element.width}x{target_element.height}")
             return True
         except Exception as e:
-            logger.error(f"Failed to send {button} click action: {str(e)}")
+            logger.error(f"Failed to click on {element_info}: {str(e)}")
             return False
     
     def _handle_keyboard_action(self, action_config: Dict[str, Any]) -> bool:
@@ -380,16 +389,19 @@ class SimpleAutomation:
             return False
     
     def _handle_mouse_action(self, action_config: Dict[str, Any], target_element: Optional[BoundingBox]) -> bool:
-        """Handle advanced mouse actions."""
+        """Handle advanced mouse actions with enhanced logging."""
         action_type = action_config.get("type")
         
-        # Get coordinates
+        # Get element information for logging
+        element_info = "unknown element"
         if target_element:
+            element_info = f"'{target_element.element_text}'" if target_element.element_text else f"{target_element.element_type} element"
             x = target_element.x + (target_element.width // 2)
             y = target_element.y + (target_element.height // 2)
         else:
             x = action_config.get("x", 0)
             y = action_config.get("y", 0)
+            element_info = "coordinates"
         
         if action_type == "double_click":
             button = action_config.get("button", "left")
@@ -399,10 +411,10 @@ class SimpleAutomation:
                     "x": x, "y": y,
                     "button": button
                 })
-                logger.info(f"Double-{button}-clicked at ({x}, {y})")
+                logger.info(f"Double-clicked on {element_info} at ({x}, {y})")
                 return True
             except Exception as e:
-                logger.error(f"Failed to double-click: {str(e)}")
+                logger.error(f"Failed to double-click on {element_info}: {str(e)}")
                 return False
         
         elif action_type == "right_click":
@@ -412,10 +424,10 @@ class SimpleAutomation:
                     "x": x, "y": y,
                     "button": "right"
                 })
-                logger.info(f"Right-clicked at ({x}, {y})")
+                logger.info(f"Right-clicked on {element_info} at ({x}, {y})")
                 return True
             except Exception as e:
-                logger.error(f"Failed to right-click: {str(e)}")
+                logger.error(f"Failed to right-click on {element_info}: {str(e)}")
                 return False
         
         elif action_type == "middle_click":
@@ -425,71 +437,78 @@ class SimpleAutomation:
                     "x": x, "y": y,
                     "button": "middle"
                 })
-                logger.info(f"Middle-clicked at ({x}, {y})")
+                logger.info(f"Middle-clicked on {element_info} at ({x}, {y})")
                 return True
             except Exception as e:
-                logger.error(f"Failed to middle-click: {str(e)}")
+                logger.error(f"Failed to middle-click on {element_info}: {str(e)}")
                 return False
         
         return False
     
     def _handle_drag_action(self, action_config: Dict[str, Any], target_element: Optional[BoundingBox]) -> bool:
-        """Handle drag and drop actions."""
-        # Get start coordinates
-        if target_element:
-            start_x = target_element.x + (target_element.width // 2)
-            start_y = target_element.y + (target_element.height // 2)
-        else:
-            start_x = action_config.get("start_x", 0)
-            start_y = action_config.get("start_y", 0)
+        """Handle drag and drop actions with enhanced logging."""
+        if not target_element:
+            logger.error("Drag action requires a target element")
+            return False
         
-        # Get end coordinates
-        end_x = action_config.get("end_x", start_x + 100)
-        end_y = action_config.get("end_y", start_y)
+        # Source element information
+        source_info = f"'{target_element.element_text}'" if target_element.element_text else f"{target_element.element_type} element"
+        source_x = target_element.x + (target_element.width // 2)
+        source_y = target_element.y + (target_element.height // 2)
+        
+        # Destination coordinates
+        dest_x = action_config.get("dest_x", source_x + 100)
+        dest_y = action_config.get("dest_y", source_y + 100)
         
         # Drag parameters
-        duration = action_config.get("duration", 1.0)
-        button = action_config.get("button", "left")
+        drag_duration = action_config.get("duration", 1.0)
+        steps = action_config.get("steps", 20)
         
         try:
-            # Note: This requires SUT service support for drag operations
             response = self.network.send_action({
                 "type": "drag",
-                "start_x": start_x, "start_y": start_y,
-                "end_x": end_x, "end_y": end_y,
-                "duration": duration,
-                "button": button
+                "start_x": source_x,
+                "start_y": source_y,
+                "end_x": dest_x,
+                "end_y": dest_y,
+                "duration": drag_duration,
+                "steps": steps
             })
-            logger.info(f"Dragged from ({start_x}, {start_y}) to ({end_x}, {end_y})")
+            logger.info(f"Dragged {source_info} from ({source_x}, {source_y}) to ({dest_x}, {dest_y})")
             return True
         except Exception as e:
-            logger.error(f"Failed to drag: {str(e)}")
+            logger.error(f"Failed to drag {source_info}: {str(e)}")
             return False
+
     
     def _handle_scroll_action(self, action_config: Dict[str, Any], target_element: Optional[BoundingBox]) -> bool:
-        """Handle scroll actions."""
-        # Get coordinates
+        """Handle scroll actions with enhanced logging."""
+        # Get scroll location
         if target_element:
+            element_info = f"'{target_element.element_text}'" if target_element.element_text else f"{target_element.element_type} element"
             x = target_element.x + (target_element.width // 2)
             y = target_element.y + (target_element.height // 2)
         else:
-            x = action_config.get("x", 0)
-            y = action_config.get("y", 0)
+            x = action_config.get("x", 500)  # Default center screen
+            y = action_config.get("y", 400)
+            element_info = "screen coordinates"
         
-        direction = action_config.get("direction", "up")
+        # Scroll parameters
+        direction = action_config.get("direction", "down")
         clicks = action_config.get("clicks", 3)
         
         try:
             response = self.network.send_action({
                 "type": "scroll",
-                "x": x, "y": y,
+                "x": x,
+                "y": y,
                 "direction": direction,
                 "clicks": clicks
             })
-            logger.info(f"Scrolled {direction} {clicks} clicks at ({x}, {y})")
+            logger.info(f"Scrolled {direction} {clicks} clicks on {element_info} at ({x}, {y})")
             return True
         except Exception as e:
-            logger.error(f"Failed to scroll: {str(e)}")
+            logger.error(f"Failed to scroll on {element_info}: {str(e)}")
             return False
     
     def _handle_wait_action(self, action_config: Dict[str, Any]) -> bool:
@@ -591,10 +610,12 @@ class SimpleAutomation:
                 logger.info(f"Still waiting... {i}/{duration} seconds elapsed")
     
     def _find_matching_element(self, target_def, bounding_boxes):
-        """Find a UI element matching the target definition."""
+        """Find a UI element matching the target definition with enhanced logging."""
         target_type = target_def.get("type", "any")
         target_text = target_def.get("text", "")
         match_type = target_def.get("text_match", "contains")
+        
+        logger.debug(f"Searching for element: type='{target_type}', text='{target_text}', match_strategy='{match_type}'")
         
         for bbox in bounding_boxes:
             # Check element type
@@ -614,13 +635,23 @@ class SimpleAutomation:
                     text_match = bbox_text_lower.startswith(target_text_lower)
                 elif match_type == "endswith":
                     text_match = bbox_text_lower.endswith(target_text_lower)
+                
+                # Debug logging for text matching attempts
+                if type_match:
+                    logger.debug(f"  Checking element '{bbox.element_text}': text_match={text_match} (strategy={match_type})")
+                    
             elif not target_text:
                 text_match = True
             
             if type_match and text_match:
+                element_text = bbox.element_text if bbox.element_text else "(no text)"
+                logger.debug(f"✅ Match found: {bbox.element_type} '{element_text}' at ({bbox.x}, {bbox.y})")
                 return bbox
         
+        logger.debug("❌ No matching element found")
         return None
+            
+
     
     def _verify_step_success(self, step: Dict[str, Any], step_num: int) -> bool:
         """Verify step success with enhanced checking."""
@@ -651,28 +682,14 @@ class SimpleAutomation:
             return False
     
     def _log_available_elements(self, bounding_boxes):
-        """Log available elements for debugging."""
+        """Log available elements for debugging with enhanced formatting."""
         if bounding_boxes:
-            logger.info("Available UI elements:")
+            logger.info(f"Available UI elements ({len(bounding_boxes)} found):")
             for i, bbox in enumerate(bounding_boxes):
-                logger.info(f"  {i+1}. Type: {bbox.element_type}, Text: '{bbox.element_text}'")
+                element_text = bbox.element_text if bbox.element_text else "(no text)"
+                logger.info(f"  [{i+1}] {bbox.element_type}: '{element_text}' at ({bbox.x}, {bbox.y}, {bbox.width}x{bbox.height})")
         else:
-            logger.info("No UI elements detected")
-    
-    def _execute_fallback(self):
-        """Execute fallback action if step fails."""
-        fallback = self.config.get("fallbacks", {}).get("general", {})
-        if fallback:
-            logger.info("Executing fallback action")
-            self._execute_modular_action(fallback, None, 0)
-        else:
-            logger.info("No fallback action defined, pressing Escape key as default")
-            try:
-                self.network.send_action({"type": "key", "key": "Escape"})
-            except Exception as e:
-                logger.error(f"Failed to execute default fallback: {str(e)}")
-        
-        time.sleep(1)
+            logger.info("No UI elements detected in current screenshot")
 # `"""
 # Simple step-by-step automation module for game UI navigation.
 # Uses a direct procedural approach instead of complex state machines.

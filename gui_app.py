@@ -169,8 +169,9 @@ class AutomationGUI:
         
         # Queue handler for GUI
         queue_handler = QueueHandler(self.log_queue)
-        queue_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', 
-                                           datefmt='%H:%M:%S')
+        # NEW - includes module names like command line
+        queue_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
+                                   datefmt='%H:%M:%S')
         queue_handler.setFormatter(queue_formatter)
         self.logger.addHandler(queue_handler)
 

@@ -16,12 +16,12 @@ metadata:
 
 # Enhanced features for Intel performance analysis
 enhanced_features:
-  monitor_process_cpu: true
-  monitor_hybrid_cores: true
-  track_power_consumption: true
-  screenshot_on_failure: true
-  detailed_logging: true
-  thermal_monitoring: true
+  monitor_process_cpu: false
+  monitor_hybrid_cores: false
+  track_power_consumption: false
+  screenshot_on_failure: false
+  detailed_logging: false
+  thermal_monitoring: false
 
 # Main automation workflow with advanced action demonstrations
 steps:
@@ -125,18 +125,18 @@ steps:
     expected_delay: 0
     timeout: 130
 
-  # === POST-BENCHMARK ACTIONS ===
-  6:
-    description: "Capture results from console"
-    find:
-      type: "icon"
-      text: "console"
-      text_match: "contains"
-    action:
-      type: "key"
-      button: "`" # Backtick key for console
-    expected_delay: 2
-    timeout: 20
+  # # === POST-BENCHMARK ACTIONS ===
+  # 6:
+  #   description: "Capture results from console"
+  #   find:
+  #     type: "icon"
+  #     text: "console"
+  #     text_match: "contains"
+  #   action:
+  #     type: "key"
+  #     button: "`" # Backtick key for console
+  #   expected_delay: 2
+  #   timeout: 20
 
   # 9:
   #   description: "Use hotkey to save results (Ctrl+S)"
