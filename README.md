@@ -17,7 +17,7 @@
 
 VCAP represents a sophisticated automation framework that transforms how we approach game user interface navigation and benchmarking. Think of it as your intelligent assistant that can "see" game interfaces just like a human would, but with the precision and consistency that only automated systems can provide.
 
-Originally conceived for Counter-Strike 2 benchmark automation, VCAP has evolved into a flexible platform capable of automating virtually any game's UI workflow. The key insight behind this system is that game interfaces, while visually complex, follow predictable patterns that can be understood through modern AI vision models.
+Originally conceived for games benchmark automation, VCAP has evolved into a flexible platform capable of automating virtually any game's/apss UI workflow. The key insight behind this system is that game interfaces, while visually complex, follow predictable patterns that can be understood through modern AI vision models.
 
 The system operates on a client-server architecture where your development machine/server acts as the "brain" that analyzes screenshots and makes decisions, while a remote System Under Test (SUT) serves as the "hands" that actually interact with the game. This separation allows you to run complex AI models on powerful hardware while testing games on different systems.
 
@@ -91,7 +91,7 @@ Understanding the differences between vision models is crucial for choosing the 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    VISION MODEL CAPABILITIES                │
+│             VISION MODEL CAPABILITIES (unstable)            │
 ├─────────────────┬─────────────────┬─────────────────────────┤
 │     Model       │   Strengths     │      Best Use Case      │
 ├─────────────────┼─────────────────┼─────────────────────────┤
@@ -104,7 +104,7 @@ Understanding the differences between vision models is crucial for choosing the 
 │                 │ • Better coords │ • Precision required    │
 ├─────────────────┼─────────────────┼─────────────────────────┤
 │ Omniparser      │ • Fastest       │ • Production automation │
-│                 │ • Most precise  │ • CI/CD pipelines       │
+│  (stable)       │ • Most precise  │ • CI/CD pipelines       │
 │                 │ • Interactive   │ • High-volume testing   │
 │                 │   elements only │                         │
 └─────────────────┴─────────────────┴─────────────────────────┘
@@ -154,7 +154,7 @@ Begin by setting up your development environment. This establishes the foundatio
 
 ```bash
 git clone <repository-url>
-cd katana-game-automator
+cd vcap-game-automator
 
 # Install dependencies
 pip install -r requirements.txt
@@ -436,7 +436,7 @@ As you become more comfortable with VCAP, you'll want to fine-tune your configur
 
 Text matching is often the most reliable way to identify interface elements, but different games and interfaces require different approaches. Understanding these options helps you create more robust configurations:
 
-```yaml
+```yaml - please refer cs2_simple_rev2 yaml - for updated template.
 # Exact matching - must match completely
 text_match: "exact"
 text: "Play Game"
