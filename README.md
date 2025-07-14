@@ -19,12 +19,12 @@ VCAP represents a sophisticated automation framework that transforms how we appr
 
 Originally conceived for Counter-Strike 2 benchmark automation, VCAP has evolved into a flexible platform capable of automating virtually any game's UI workflow. The key insight behind this system is that game interfaces, while visually complex, follow predictable patterns that can be understood through modern AI vision models.
 
-The system operates on a client-server architecture where your development machine (which we call the ARL - Automated Research Lab) acts as the "brain" that analyzes screenshots and makes decisions, while a remote System Under Test (SUT) serves as the "hands" that actually interact with the game. This separation allows you to run complex AI models on powerful hardware while testing games on different systems.
+The system operates on a client-server architecture where your development machine/server acts as the "brain" that analyzes screenshots and makes decisions, while a remote System Under Test (SUT) serves as the "hands" that actually interact with the game. This separation allows you to run complex AI models on powerful hardware while testing games on different systems.
 
 ```
 ┌─────────────────┐    Network     ┌─────────────────┐
 │   Development   │◄──────────────►│  System Under   │
-│   PC (ARL)      │   Commands     │   Test (SUT)    │
+│   PC (Server)   │   Commands     │   Test (SUT)    │
 │                 │                │                 │
 │ • AI Vision     │                │ • Game Running  │
 │ • Decision Logic│                │ • Action Exec   │
