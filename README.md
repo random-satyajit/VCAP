@@ -1,4 +1,5 @@
-# Needs omniparser : https://github.com/microsoft/OmniParser
+# Needs omniparser : Please set it up from here
+# https://github.com/microsoft/OmniParser 
 
 # Katana/VCAP - Game Automator - Alpha Unstable WIP
 
