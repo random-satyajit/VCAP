@@ -1,13 +1,13 @@
 # Needs omniparser : Please set it up from here
 # https://github.com/microsoft/OmniParser 
 
-# Katana/VCAP - Game Automator - Alpha Unstable WIP
+# VCAP - Game Automator - Alpha Unstable WIP
 
 **An AI-Powered Game UI Navigation and Benchmarking System**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    🎮 KATANA GAME AUTOMATOR                 │
+│                    🎮 VCAP GAME AUTOMATOR                 │
 │                                                             │
 │  Automated UI Navigation • AI Vision • Remote Benchmarking │
 └─────────────────────────────────────────────────────────────┘
@@ -15,9 +15,9 @@
 
 ## 🎯 Overview
 
-Katana represents a sophisticated automation framework that transforms how we approach game user interface navigation and benchmarking. Think of it as your intelligent assistant that can "see" game interfaces just like a human would, but with the precision and consistency that only automated systems can provide.
+VCAP represents a sophisticated automation framework that transforms how we approach game user interface navigation and benchmarking. Think of it as your intelligent assistant that can "see" game interfaces just like a human would, but with the precision and consistency that only automated systems can provide.
 
-Originally conceived for Counter-Strike 2 benchmark automation, Katana has evolved into a flexible platform capable of automating virtually any game's UI workflow. The key insight behind this system is that game interfaces, while visually complex, follow predictable patterns that can be understood through modern AI vision models.
+Originally conceived for Counter-Strike 2 benchmark automation, VCAP has evolved into a flexible platform capable of automating virtually any game's UI workflow. The key insight behind this system is that game interfaces, while visually complex, follow predictable patterns that can be understood through modern AI vision models.
 
 The system operates on a client-server architecture where your development machine (which we call the ARL - Automated Research Lab) acts as the "brain" that analyzes screenshots and makes decisions, while a remote System Under Test (SUT) serves as the "hands" that actually interact with the game. This separation allows you to run complex AI models on powerful hardware while testing games on different systems.
 
@@ -36,11 +36,11 @@ This architectural approach provides several advantages. First, it keeps the com
 
 ## 🏗️ System Architecture
 
-Understanding Katana's architecture helps you appreciate how each component contributes to the overall automation capability. The system follows a layered design pattern, where each layer has specific responsibilities and can be modified independently.
+Understanding VCAP's architecture helps you appreciate how each component contributes to the overall automation capability. The system follows a layered design pattern, where each layer has specific responsibilities and can be modified independently.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    KATANA ARCHITECTURE                      │
+│                    VCAP ARCHITECTURE                      │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌───────────────┐  ┌──────────────┐  ┌─────────────────┐  │
@@ -118,7 +118,7 @@ Understanding the differences between vision models is crucial for choosing the 
 
 ## 🚀 Quick Start Guide
 
-Let's get you up and running with Katana. I'll guide you through each step, explaining why each component is necessary and how it contributes to the overall system functionality.
+Let's get you up and running with VCAP. I'll guide you through each step, explaining why each component is necessary and how it contributes to the overall system functionality.
 
 ### Prerequisites
 
@@ -184,9 +184,9 @@ This step is crucial because the vision model you choose significantly impacts b
 └─────────────────────────────────────────────────────────────┘
 ```
 
-LM Studio provides an easy way to run large language models locally. When you load a model in LM Studio, it automatically optimizes the model for your hardware and provides an OpenAI-compatible API endpoint. This means Katana can communicate with these models using standard protocols.
+LM Studio provides an easy way to run large language models locally. When you load a model in LM Studio, it automatically optimizes the model for your hardware and provides an OpenAI-compatible API endpoint. This means VCAP can communicate with these models using standard protocols.
 
-Omniparser, on the other hand, is a specialized service designed specifically for UI automation. If you're planning to use Katana in production environments or need the highest possible speed and accuracy, Omniparser is typically the better choice.
+Omniparser, on the other hand, is a specialized service designed specifically for UI automation. If you're planning to use VCAP in production environments or need the highest possible speed and accuracy, Omniparser is typically the better choice.
 
 **Step 3: Setup SUT Service**
 
@@ -211,7 +211,7 @@ The GUI automatically detects your configuration and provides visual feedback ab
 
 ## 🎮 Game Configuration
 
-Game configuration is where Katana's flexibility truly shines. The system supports two distinct approaches to automation, each designed for different use cases and complexity levels.
+Game configuration is where VCAP's flexibility truly shines. The system supports two distinct approaches to automation, each designed for different use cases and complexity levels.
 
 ### Configuration Types
 
@@ -309,13 +309,13 @@ The state machine approach defines what each state looks like (through `required
 
 ## 🖥️ User Interface Guide
 
-The Katana GUI is designed to provide comprehensive control over the automation process while maintaining clarity and ease of use. Understanding the interface layout helps you efficiently manage your automation workflows.
+The VCAP GUI is designed to provide comprehensive control over the automation process while maintaining clarity and ease of use. Understanding the interface layout helps you efficiently manage your automation workflows.
 
 ### GUI Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      KATANA GUI LAYOUT                      │
+│                      VCAP GUI LAYOUT                      │
 ├──────────────────────────┬──────────────────────────────────┤
 │     SETTINGS PANEL       │         LOG DISPLAY             │
 │                          │                                  │
@@ -430,7 +430,7 @@ Each vision model has unique characteristics that make it suitable for different
 
 ## 🔧 Advanced Configuration
 
-As you become more comfortable with Katana, you'll want to fine-tune your configurations for better accuracy and reliability. Advanced configuration options give you precise control over how the system behaves in different scenarios.
+As you become more comfortable with VCAP, you'll want to fine-tune your configurations for better accuracy and reliability. Advanced configuration options give you precise control over how the system behaves in different scenarios.
 
 ### Text Matching Strategies
 
@@ -524,7 +524,7 @@ fallbacks:
 Understanding the project organization helps you navigate the codebase and know where to make modifications for your specific needs:
 
 ```
-katana-game-automator/
+VCAP-game-automator/
 ├── 📁 modules/
 │   ├── 🧠 decision_engine.py      # State machine automation
 │   ├── 🎯 simple_automation.py    # Step-based automation  
@@ -561,7 +561,7 @@ The **logs directory** automatically organizes output from each automation run. 
 
 ## 🎯 Usage Examples
 
-Let me show you practical examples of how to use Katana in different scenarios. These examples demonstrate both command-line and configuration-based approaches.
+Let me show you practical examples of how to use VCAP in different scenarios. These examples demonstrate both command-line and configuration-based approaches.
 
 ### Command Line Execution
 
@@ -687,7 +687,7 @@ Even with careful configuration, automation systems can encounter issues. Unders
 
 ### Debug Mode and Logging
 
-Katana provides comprehensive logging capabilities to help you understand what's happening during automation execution:
+VCAP provides comprehensive logging capabilities to help you understand what's happening during automation execution:
 
 ```python
 # In gui_app.py or main.py
@@ -704,7 +704,7 @@ Enable DEBUG level logging when you're developing new configurations or troubles
 
 ### Screenshot Analysis
 
-The annotated screenshots that Katana automatically generates are invaluable for understanding and debugging vision model behavior. These images show bounding boxes around every detected UI element, along with labels indicating the element type and confidence score.
+The annotated screenshots that VCAP automatically generates are invaluable for understanding and debugging vision model behavior. These images show bounding boxes around every detected UI element, along with labels indicating the element type and confidence score.
 
 Use these annotated screenshots to verify that the vision model is detecting the elements you expect, identify elements that might be causing false matches, adjust coordinate calculations for clicking accuracy, and optimize text matching strategies for better reliability.
 
@@ -790,14 +790,14 @@ Compare results across multiple runs to ensure that the automation itself isn't 
 
 ## 🤝 Contributing
 
-Katana is designed to be extensible and customizable. Understanding the development patterns helps you contribute improvements or adapt the system for your specific needs.
+VCAP is designed to be extensible and customizable. Understanding the development patterns helps you contribute improvements or adapt the system for your specific needs.
 
 ### Development Setup
 
 ```bash
 # Setup development environment
 git clone <repository>
-cd katana-game-automator
+cd VCAP-game-automator
 python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements-dev.txt
@@ -818,7 +818,7 @@ Document any game-specific quirks or requirements in your configuration files an
 
 ### Vision Model Integration
 
-To integrate new vision models into Katana:
+To integrate new vision models into VCAP:
 
 1. **Implement client class** following the patterns established by existing clients (gemma_client.py, qwen_client.py, omniparser_client.py)
 2. **Add to GUI selection options** in the vision model configuration section
@@ -829,7 +829,7 @@ The existing client implementations provide good templates for different approac
 
 ## 📊 Gaming Performance Analysis
 
-As someone deeply involved in gaming performance optimization, you'll appreciate how Katana can automate the collection of performance metrics across different hardware configurations. The system's modular architecture makes it particularly well-suited for integration with Intel's performance analysis tools.
+As someone deeply involved in gaming performance optimization, you'll appreciate how VCAP can automate the collection of performance metrics across different hardware configurations. The system's modular architecture makes it particularly well-suited for integration with Intel's performance analysis tools.
 
 **Automated Benchmark Sweeps** become possible when you can reliably navigate to benchmark settings and modify parameters programmatically. Create configurations that systematically test different quality presets, resolutions, and advanced graphics options without manual intervention.
 
@@ -837,7 +837,7 @@ As someone deeply involved in gaming performance optimization, you'll appreciate
 
 **Hybrid Core Analysis** represents an interesting application where you could automate the testing of games across different P-core and E-core configurations, systematically measuring performance scaling and power efficiency across various workloads.
 
-**AI Workload Testing** becomes increasingly important as games incorporate more AI-enhanced features. Katana's vision system itself demonstrates AI capabilities, and the framework could be extended to validate AI-enhanced gaming features under controlled conditions.
+**AI Workload Testing** becomes increasingly important as games incorporate more AI-enhanced features. VCAP's vision system itself demonstrates AI capabilities, and the framework could be extended to validate AI-enhanced gaming features under controlled conditions.
 
 The automation system's ability to reproduce exact test sequences makes it valuable for comparing performance across different hardware configurations, driver versions, or game settings. This reproducibility is crucial for the kind of rigorous performance analysis work you do at Intel.
 
